@@ -1,0 +1,190 @@
+// =====================================================================
+// ModalCliente.scss — BEM estricto, variables globales --tp-*
+// =====================================================================
+
+.modal-cliente {
+  width: 100%;
+  max-width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--tp-color-surface);
+  border-radius: var(--tp-radius);
+  padding: var(--tp-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--tp-space-3);
+
+  &__overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(38, 40, 43, 0.45);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 10vh;
+    z-index: 100;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+
+  &__cerrar {
+    background: none;
+    border: none;
+    color: var(--tp-color-text-muted);
+    cursor: pointer;
+    padding: var(--tp-space-1);
+    border-radius: 6px;
+
+    &:hover {
+      background: var(--tp-color-bg);
+    }
+  }
+
+  &__input-wrap {
+    display: flex;
+    align-items: center;
+    gap: var(--tp-space-2);
+    padding: var(--tp-space-2) var(--tp-space-3);
+    background: var(--tp-color-bg);
+    border: 1px solid var(--tp-color-border);
+    border-radius: var(--tp-radius);
+    color: var(--tp-color-text-muted);
+
+    &:focus-within {
+      border-color: var(--tp-color-primary);
+    }
+  }
+
+  &__input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.9rem;
+    color: var(--tp-color-text);
+
+    &::placeholder {
+      color: var(--tp-color-text-muted);
+    }
+  }
+
+  &__error {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--tp-color-danger);
+  }
+
+  &__estado {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--tp-color-text-muted);
+  }
+
+  &__resultados {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--tp-space-2);
+    max-height: 240px;
+    overflow-y: auto;
+  }
+
+  &__resultado {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: var(--tp-space-2) var(--tp-space-3);
+    background: var(--tp-color-bg);
+    border: 1px solid var(--tp-color-border);
+    border-radius: var(--tp-radius);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s ease;
+
+    &:hover {
+      border-color: var(--tp-color-primary);
+    }
+  }
+
+  &__resultado-nombre {
+    font-size: 0.85rem;
+    flex: 1;
+  }
+
+  &__resultado-doc {
+    font-size: 0.75rem;
+    color: var(--tp-color-text-muted);
+    margin-right: var(--tp-space-3);
+  }
+
+  &__resultado-puntos {
+    font-size: 0.75rem;
+    color: var(--tp-color-primary);
+    font-weight: 600;
+  }
+
+  &__crear {
+    display: flex;
+    flex-direction: column;
+    gap: var(--tp-space-2);
+    padding: var(--tp-space-3);
+    background: var(--tp-color-accent-soft);
+    border: 1px solid var(--tp-color-accent);
+    border-radius: var(--tp-radius);
+  }
+
+  &__crear-hint {
+    display: flex;
+    align-items: center;
+    gap: var(--tp-space-2);
+    margin: 0;
+    font-size: 0.8rem;
+    color: #8a611f;
+  }
+
+  &__crear-campos {
+    display: flex;
+    flex-direction: column;
+    gap: var(--tp-space-2);
+  }
+
+  &__crear-input {
+    padding: var(--tp-space-2) var(--tp-space-3);
+    border: 1px solid var(--tp-color-border);
+    border-radius: 8px;
+    font-size: 0.85rem;
+
+    &:focus-visible {
+      outline: 2px solid var(--tp-color-accent);
+    }
+  }
+
+  &__crear-btn {
+    padding: var(--tp-space-2);
+    background: var(--tp-color-primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}

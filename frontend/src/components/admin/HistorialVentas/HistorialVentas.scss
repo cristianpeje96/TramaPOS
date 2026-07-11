@@ -1,0 +1,117 @@
+.historial-ventas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tp-space-3);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    select {
+      padding: var(--tp-space-1) var(--tp-space-2);
+      border: 1px solid var(--tp-color-border);
+      border-radius: 8px;
+      font-size: 0.8rem;
+    }
+  }
+
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: var(--tp-space-2);
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  &__error,
+  &__estado {
+    color: var(--tp-color-text-muted);
+    font-size: 0.85rem;
+  }
+
+  &__error {
+    color: var(--tp-color-danger);
+  }
+
+  &__tabla {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--tp-color-surface);
+    border: 1px solid var(--tp-color-border);
+    border-radius: var(--tp-radius);
+    overflow: hidden;
+    font-size: 0.8rem;
+
+    th {
+      text-align: left;
+      padding: var(--tp-space-2) var(--tp-space-3);
+      background: var(--tp-color-bg);
+      color: var(--tp-color-text-muted);
+      font-weight: 600;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    td {
+      padding: var(--tp-space-2) var(--tp-space-3);
+      border-top: 1px solid var(--tp-color-border);
+    }
+  }
+
+  &__fila--anulada {
+    opacity: 0.6;
+
+    td {
+      text-decoration: line-through;
+      text-decoration-color: var(--tp-color-danger);
+      text-decoration-thickness: 1px;
+    }
+
+    td:has(.historial-ventas__badge) {
+      text-decoration: none;
+    }
+  }
+
+  &__badge-estado--completada {
+    background: rgba(47, 122, 77, 0.12);
+    color: var(--tp-color-success);
+  }
+
+  &__badge-estado--anulada {
+    background: rgba(192, 57, 43, 0.12);
+    color: var(--tp-color-danger);
+  }
+
+  &__badge-estado--pendiente_pago {
+    background: var(--tp-color-accent-soft);
+    color: #8a611f;
+  }
+
+  &__badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+
+    &--no_aplica {
+      background: var(--tp-color-bg);
+      color: var(--tp-color-text-muted);
+    }
+    &--pendiente {
+      background: var(--tp-color-accent-soft);
+      color: #8a611f;
+    }
+    &--enviada,
+    &--aceptada {
+      background: rgba(47, 122, 77, 0.12);
+      color: var(--tp-color-success);
+    }
+    &--rechazada {
+      background: rgba(192, 57, 43, 0.1);
+      color: var(--tp-color-danger);
+    }
+  }
+}

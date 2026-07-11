@@ -1,0 +1,39 @@
+// =====================================================================
+// TramaPos · Reset base (patrón 7-1 / base)
+// =====================================================================
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--tp-font-sans);
+  background: var(--tp-color-bg);
+  color: var(--tp-color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+.u-cifra {
+  font-family: var(--tp-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}

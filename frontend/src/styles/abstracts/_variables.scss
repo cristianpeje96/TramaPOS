@@ -1,0 +1,28 @@
+// =====================================================================
+// TramaPos · Variables globales (patrón 7-1 / abstracts)
+// Misma paleta usada en CheckoutPanel.scss, ahora centralizada para
+// que TODOS los componentes la compartan sin redefinir valores.
+// =====================================================================
+
+:root {
+  --tp-color-bg: #f6f5f2;
+  --tp-color-surface: #ffffff;
+  --tp-color-text: #26282b;
+  --tp-color-text-muted: #6b6f76;
+  --tp-color-primary: #1d3557;
+  --tp-color-accent: #d9a441;
+  --tp-color-accent-soft: #f6e9cf;
+  --tp-color-border: #e4e2dd;
+  --tp-color-danger: #c0392b;
+  --tp-color-success: #2f7a4d;
+
+  --tp-radius: 10px;
+  --tp-space-1: 4px;
+  --tp-space-2: 8px;
+  --tp-space-3: 16px;
+  --tp-space-4: 24px;
+
+  --tp-font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --tp-font-mono:
+    "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}

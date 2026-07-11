@@ -1,0 +1,53 @@
+.skeleton {
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    var(--tp-color-border) 25%,
+    var(--tp-color-bg) 50%,
+    var(--tp-color-border) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-filas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tp-space-2);
+  padding: var(--tp-space-2) 0;
+
+  &__fila {
+    display: flex;
+    align-items: center;
+    gap: var(--tp-space-4);
+    padding: var(--tp-space-2) var(--tp-space-3);
+    background: var(--tp-color-surface);
+    border: 1px solid var(--tp-color-border);
+    border-radius: var(--tp-radius);
+  }
+}
+
+.skeleton-tarjetas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--tp-space-2);
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: var(--tp-space-2);
+    background: var(--tp-color-surface);
+    border: 1px solid var(--tp-color-border);
+    border-radius: var(--tp-radius);
+  }
+}

@@ -1,0 +1,9 @@
+// =====================================================================
+// TramaPos · Punto de entrada de estilos globales.
+// Importado UNA sola vez, desde main.jsx.
+// Los .scss de cada componente (ej: CheckoutPanel.scss) se importan
+// directamente en su propio .jsx, no aquí.
+// =====================================================================
+
+@use "abstracts/variables";
+@use "base/reset";

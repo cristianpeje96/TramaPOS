@@ -1,0 +1,50 @@
+# =====================================================================
+# SURTHILANAS · .gitignore raíz
+# =====================================================================
+
+# --- Variables de entorno / secretos: NUNCA subir ---
+.env
+.env.*
+!.env.example
+!*.env.example
+
+# --- Python / FastAPI (backend) ---
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+alembic/versions/__pycache__/
+
+# --- Node / React (frontend) ---
+node_modules/
+dist/
+build/
+.vite/
+*.local
+
+# --- Archivos generados sensibles ---
+*.pem
+*.key
+*.crt
+facturas_generadas/
+tickets_generados/
+
+# --- Bases de datos locales / dumps ---
+*.sql.gz
+*.dump
+postgres-data/
+
+# --- Editor / SO ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
+logs/

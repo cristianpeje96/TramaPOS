@@ -1,0 +1,114 @@
+.historial-puntos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tp-space-3);
+  position: relative;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: var(--tp-space-2);
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  &__buscador {
+    display: flex;
+    align-items: center;
+    gap: var(--tp-space-2);
+    padding: var(--tp-space-2) var(--tp-space-3);
+    background: var(--tp-color-surface);
+    border: 1px solid var(--tp-color-border);
+    border-radius: var(--tp-radius);
+    color: var(--tp-color-text-muted);
+    max-width: 380px;
+
+    input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 0.85rem;
+      color: var(--tp-color-text);
+    }
+  }
+
+  &__estado,
+  &__error {
+    font-size: 0.82rem;
+    color: var(--tp-color-text-muted);
+  }
+
+  &__error {
+    color: var(--tp-color-danger);
+  }
+
+  &__resultados {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--tp-space-1);
+
+    button {
+      width: 100%;
+      text-align: left;
+      padding: var(--tp-space-2) var(--tp-space-3);
+      background: var(--tp-color-bg);
+      border: 1px solid var(--tp-color-border);
+      border-radius: 8px;
+      font-size: 0.82rem;
+      cursor: pointer;
+
+      &:hover {
+        border-color: var(--tp-color-primary);
+      }
+    }
+  }
+
+  &__cliente {
+    display: flex;
+    flex-direction: column;
+    gap: var(--tp-space-2);
+    padding-top: var(--tp-space-2);
+    border-top: 1px dashed var(--tp-color-border);
+
+    p {
+      margin: 0;
+      font-size: 0.88rem;
+    }
+  }
+
+  &__tabla {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--tp-color-surface);
+    border: 1px solid var(--tp-color-border);
+    border-radius: var(--tp-radius);
+    overflow: hidden;
+    font-size: 0.8rem;
+
+    th {
+      text-align: left;
+      padding: var(--tp-space-2) var(--tp-space-3);
+      background: var(--tp-color-bg);
+      color: var(--tp-color-text-muted);
+      font-weight: 600;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    td {
+      padding: var(--tp-space-2) var(--tp-space-3);
+      border-top: 1px solid var(--tp-color-border);
+    }
+  }
+}

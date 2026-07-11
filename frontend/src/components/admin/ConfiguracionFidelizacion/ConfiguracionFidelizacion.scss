@@ -1,0 +1,196 @@
+.config-fidelizacion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tp-space-4);
+
+  &__seccion {
+    display: flex;
+    flex-direction: column;
+    gap: var(--tp-space-2);
+    padding: var(--tp-space-3);
+    background: var(--tp-color-surface);
+    border: 1px solid var(--tp-color-border);
+    border-radius: var(--tp-radius);
+  }
+
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: var(--tp-space-2);
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  &__ayuda {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--tp-color-text-muted);
+    max-width: 560px;
+  }
+
+  &__error {
+    margin: 0;
+    color: var(--tp-color-danger);
+    font-size: 0.8rem;
+  }
+
+  &__estado {
+    color: var(--tp-color-text-muted);
+    font-size: 0.85rem;
+  }
+
+  &__form-puntos {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--tp-space-3);
+    flex-wrap: wrap;
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.78rem;
+      color: var(--tp-color-text-muted);
+    }
+
+    input {
+      padding: var(--tp-space-1) var(--tp-space-2);
+      border: 1px solid var(--tp-color-border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      width: 160px;
+    }
+
+    button {
+      padding: var(--tp-space-2) var(--tp-space-3);
+      background: var(--tp-color-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--tp-radius);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__ejemplo {
+    margin: 0;
+    padding: var(--tp-space-2) var(--tp-space-3);
+    background: var(--tp-color-accent-soft);
+    border-radius: var(--tp-radius);
+    font-size: 0.8rem;
+    color: #8a611f;
+  }
+
+  &__header-rangos {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    button {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: var(--tp-space-1) var(--tp-space-3);
+      background: var(--tp-color-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--tp-radius);
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+  }
+
+  &__fila-form {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1.3fr 1fr auto;
+    gap: var(--tp-space-2);
+    align-items: center;
+
+    input {
+      padding: var(--tp-space-1) var(--tp-space-2);
+      border: 1px solid var(--tp-color-border);
+      border-radius: 6px;
+      font-size: 0.8rem;
+    }
+
+    button {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: var(--tp-space-1) var(--tp-space-2);
+      background: var(--tp-color-primary);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+  }
+
+  &__tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+
+    th {
+      text-align: left;
+      padding: var(--tp-space-2) var(--tp-space-3);
+      background: var(--tp-color-bg);
+      color: var(--tp-color-text-muted);
+      font-weight: 600;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    td {
+      padding: var(--tp-space-2) var(--tp-space-3);
+      border-top: 1px solid var(--tp-color-border);
+
+      input {
+        width: 100%;
+        padding: 3px 6px;
+        border: 1px solid var(--tp-color-border);
+        border-radius: 6px;
+        font-size: 0.8rem;
+      }
+    }
+  }
+
+  &__fila--inactiva {
+    opacity: 0.5;
+  }
+
+  &__toggle-activo {
+    background: none;
+    border: 1px solid var(--tp-color-border);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+
+  &__acciones-fila {
+    display: flex;
+    gap: 4px;
+
+    button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background: var(--tp-color-bg);
+      border: 1px solid var(--tp-color-border);
+      border-radius: 6px;
+      color: var(--tp-color-primary);
+      cursor: pointer;
+    }
+  }
+}
