@@ -28,6 +28,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.modules.clientes.models import Cliente
+from app.modules.configuracion_empresa import service as configuracion_empresa_service
 from app.modules.fidelizacion import service as fidelizacion_service
 from app.modules.productos.models import VarianteProducto
 from app.modules.ventas.models import CanalVenta, DetalleVenta, EstadoFacturaDian, Venta
@@ -72,7 +73,7 @@ async def _bloquear_cliente(db: AsyncSession, cliente_id: int) -> Cliente:
     return cliente
 
 
-async def procesar_venta(db: AsyncSession, datos: VentaCrear) -> Venta:
+async def procesar_venta(db: AsyncSession, datos: VentaCrear, vendedor_id: int | None = None) -> Venta:
     try:
         variantes = await _bloquear_variantes(
             db, [linea.variante_id for linea in datos.lineas]
@@ -129,16 +130,33 @@ async def procesar_venta(db: AsyncSession, datos: VentaCrear) -> Venta:
             subtotal - descuento_puntos - descuento_manual - descuento_fidelizacion, 0.0
         )
 
+        # --- IVA: se EXTRAE del precio ya cargado, nunca se suma aparte.
+        # Si aplica_iva está apagado (persona natural no obligada), total_iva
+        # queda en 0 y el sistema se comporta exactamente igual que sin esto.
+        config_empresa = await configuracion_empresa_service.obtener_configuracion(db)
+        total_iva = 0.0
+        iva_por_linea: dict[int, tuple[float, float]] = {}  # variante_id -> (%, iva_linea)
+        if config_empresa.aplica_iva:
+            for linea in datos.lineas:
+                variante = variantes[linea.variante_id]
+                monto_linea = linea.cantidad * float(variante.precio_venta)
+                tasa = float(variante.porcentaje_iva)
+                iva_linea = monto_linea - monto_linea / (1 + tasa / 100) if tasa > 0 else 0.0
+                iva_por_linea[linea.variante_id] = (tasa, iva_linea)
+                total_iva += iva_linea
+
         venta = Venta(
             canal=datos.canal,
             sesion_caja_id=datos.sesion_caja_id,
             cliente_id=datos.cliente_id,
+            vendedor_id=vendedor_id,
             subtotal=subtotal,
             descuento_puntos=descuento_puntos,
             descuento_manual=descuento_manual,
             motivo_descuento_manual=datos.motivo_descuento_manual,
             descuento_fidelizacion=descuento_fidelizacion,
             rango_fidelizacion_aplicado=rango_aplicado,
+            total_iva=total_iva,
             total=total,
             metodo_pago=datos.metodo_pago,
             estado_factura_dian=EstadoFacturaDian.PENDIENTE,
@@ -148,12 +166,15 @@ async def procesar_venta(db: AsyncSession, datos: VentaCrear) -> Venta:
 
         for linea in datos.lineas:
             variante = variantes[linea.variante_id]
+            tasa_aplicada, iva_linea = iva_por_linea.get(linea.variante_id, (0.0, 0.0))
             db.add(
                 DetalleVenta(
                     venta_id=venta.id,
                     variante_id=variante.id,
                     cantidad=linea.cantidad,
                     precio_unitario=variante.precio_venta,
+                    porcentaje_iva_aplicado=tasa_aplicada,
+                    iva_linea=iva_linea,
                 )
             )
         await db.flush()  # dispara trg_descontar_stock en PostgreSQL

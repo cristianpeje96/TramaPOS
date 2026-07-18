@@ -2,18 +2,21 @@
 TramaPos · Router del módulo fidelizacion.
 Prefijo montado en main.py como /api/v1/fidelizacion.
 
+Endpoints que el POS usa en plena venta (simular-redencion, rango-cliente):
+cualquier usuario logueado. Configuración, rangos e historial: solo ADMIN.
+
 Nota: NO expone un endpoint de "redimir puntos" aislado — la redención
 solo ocurre dentro de POST /ventas (canal=POS, F9 en el frontend), porque
-tiene que ir atada a una venta real. Aquí solo van configuración, consulta
-de historial, simulación (para pintar el descuento en el POS) y ajustes
-manuales administrativos.
+tiene que ir atada a una venta real.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.dependencies import obtener_usuario_actual, requiere_rol
 from app.db.session import get_db
-from app.modules.clientes.service import buscar_por_documento
+from app.modules.clientes.models import Cliente
 from app.modules.fidelizacion import service
 from app.modules.fidelizacion.schemas import (
     AjusteManualCrear,
@@ -26,8 +29,7 @@ from app.modules.fidelizacion.schemas import (
     RangoDescuentoOut,
     SimulacionRedencionOut,
 )
-from sqlalchemy import select
-from app.modules.clientes.models import Cliente
+from app.modules.usuarios.models import RolUsuario, Usuario
 
 router = APIRouter(prefix="/fidelizacion", tags=["fidelizacion"])
 
@@ -41,13 +43,18 @@ async def _obtener_cliente_o_404(db: AsyncSession, cliente_id: int) -> Cliente:
 
 
 @router.get("/configuracion", response_model=ConfiguracionFidelizacionOut)
-async def obtener_configuracion(db: AsyncSession = Depends(get_db)):
+async def obtener_configuracion(
+    db: AsyncSession = Depends(get_db),
+    _admin: Usuario = Depends(requiere_rol(RolUsuario.ADMIN)),
+):
     return await service.obtener_configuracion(db)
 
 
 @router.patch("/configuracion", response_model=ConfiguracionFidelizacionOut)
 async def actualizar_configuracion(
-    datos: ConfiguracionFidelizacionActualizar, db: AsyncSession = Depends(get_db)
+    datos: ConfiguracionFidelizacionActualizar,
+    db: AsyncSession = Depends(get_db),
+    _admin: Usuario = Depends(requiere_rol(RolUsuario.ADMIN)),
 ):
     config = await service.obtener_configuracion(db)
     config.pesos_por_punto = datos.pesos_por_punto
@@ -58,7 +65,11 @@ async def actualizar_configuracion(
 
 
 @router.get("/historial/{cliente_id}", response_model=list[HistorialPuntosOut])
-async def historial_de_cliente(cliente_id: int, db: AsyncSession = Depends(get_db)):
+async def historial_de_cliente(
+    cliente_id: int,
+    db: AsyncSession = Depends(get_db),
+    _admin: Usuario = Depends(requiere_rol(RolUsuario.ADMIN)),
+):
     await _obtener_cliente_o_404(db, cliente_id)
     return await service.historial_de_cliente(db, cliente_id)
 
@@ -68,6 +79,7 @@ async def simular_redencion(
     cliente_id: int,
     puntos: int = Query(gt=0, description="Puntos que el cajero quiere redimir (F9)"),
     db: AsyncSession = Depends(get_db),
+    _usuario: Usuario = Depends(obtener_usuario_actual),
 ):
     """
     El frontend llama esto al escribir un número en el input de redención (F9),
@@ -86,7 +98,11 @@ async def simular_redencion(
 
 
 @router.post("/ajuste-manual", response_model=HistorialPuntosOut, status_code=201)
-async def crear_ajuste_manual(datos: AjusteManualCrear, db: AsyncSession = Depends(get_db)):
+async def crear_ajuste_manual(
+    datos: AjusteManualCrear,
+    db: AsyncSession = Depends(get_db),
+    _admin: Usuario = Depends(requiere_rol(RolUsuario.ADMIN)),
+):
     cliente = await _obtener_cliente_o_404(db, datos.cliente_id)
     try:
         return await service.ajuste_manual(db, cliente, datos.puntos, datos.nota)
@@ -96,18 +112,28 @@ async def crear_ajuste_manual(datos: AjusteManualCrear, db: AsyncSession = Depen
 
 # --- Rangos de descuento por fidelización ---
 @router.get("/rangos", response_model=list[RangoDescuentoOut])
-async def listar_rangos(db: AsyncSession = Depends(get_db)):
+async def listar_rangos(
+    db: AsyncSession = Depends(get_db),
+    _admin: Usuario = Depends(requiere_rol(RolUsuario.ADMIN)),
+):
     return await service.listar_rangos(db)
 
 
 @router.post("/rangos", response_model=RangoDescuentoOut, status_code=201)
-async def crear_rango(datos: RangoDescuentoCrear, db: AsyncSession = Depends(get_db)):
+async def crear_rango(
+    datos: RangoDescuentoCrear,
+    db: AsyncSession = Depends(get_db),
+    _admin: Usuario = Depends(requiere_rol(RolUsuario.ADMIN)),
+):
     return await service.crear_rango(db, datos)
 
 
 @router.patch("/rangos/{rango_id}", response_model=RangoDescuentoOut)
 async def actualizar_rango(
-    rango_id: int, datos: RangoDescuentoActualizar, db: AsyncSession = Depends(get_db)
+    rango_id: int,
+    datos: RangoDescuentoActualizar,
+    db: AsyncSession = Depends(get_db),
+    _admin: Usuario = Depends(requiere_rol(RolUsuario.ADMIN)),
 ):
     try:
         return await service.actualizar_rango(db, rango_id, datos)
@@ -116,7 +142,11 @@ async def actualizar_rango(
 
 
 @router.get("/rango-cliente/{cliente_id}", response_model=RangoClienteOut)
-async def rango_del_cliente(cliente_id: int, db: AsyncSession = Depends(get_db)):
+async def rango_del_cliente(
+    cliente_id: int,
+    db: AsyncSession = Depends(get_db),
+    _usuario: Usuario = Depends(obtener_usuario_actual),
+):
     """El CheckoutPanel llama esto al seleccionar un cliente (F7), para
     mostrar de una vez su descuento automático por nivel de fidelización."""
     cliente = await _obtener_cliente_o_404(db, cliente_id)

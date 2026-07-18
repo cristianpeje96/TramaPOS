@@ -7,20 +7,19 @@ import {
   Minus,
   Plus,
   RotateCcw,
+  LogOut,
 } from "lucide-react";
 
-import { cajaApi } from "../../services/api";
+import { cajaApi, cajasFisicasApi } from "../../services/api";
 import { useAtajosTeclado } from "../../hooks/useAtajosTeclado";
-import { useToast } from "../toast/ToastProvider";
+import { useToast } from "../Toast/ToastProvider";
+import { useAuth } from "../Auth/AuthProvider";
 import BuscadorProducto from "../BuscadorProducto/BuscadorProducto";
 import CheckoutPanel from "../CheckoutPanel/CheckoutPanel";
 import ModalCliente from "../ModalCliente/ModalCliente";
 import ProductosDestacados from "../ProductosDestacados/ProductosDestacados";
 import CierreCajaModal from "../CierreCajaModal/CierreCajaModal";
 import "./PosScreen.scss";
-
-// TODO: reemplazar por el id del usuario autenticado cuando exista login.
-const USUARIO_ID_TEMPORAL = 1;
 
 /**
  * PosScreen — contenedor principal del punto de venta.
@@ -36,6 +35,11 @@ const USUARIO_ID_TEMPORAL = 1;
  *     hijos, para que Esc pueda limpiarlos desde un solo lugar.
  */
 export default function PosScreen({ onIrAdmin, onIrDevoluciones }) {
+  const [cajasFisicas, setCajasFisicas] = useState(undefined); // undefined = cargando
+  const [cajaFisicaId, setCajaFisicaId] = useState(() => {
+    const guardada = localStorage.getItem("tramapos_caja_fisica_id");
+    return guardada ? Number(guardada) : null;
+  });
   const [sesion, setSesion] = useState(undefined); // undefined = cargando, null = sin sesión
   const [montoApertura, setMontoApertura] = useState("");
   const [abriendoCaja, setAbriendoCaja] = useState(false);
@@ -49,6 +53,7 @@ export default function PosScreen({ onIrAdmin, onIrDevoluciones }) {
   const refBuscador = useRef(null);
   const refCheckout = useRef(null);
   const { mostrarToast } = useToast();
+  const { usuario, logout } = useAuth();
   const [atajoActivo, setAtajoActivo] = useState(null); // { etiqueta, key }
   const timeoutAtajoRef = useRef(null);
   const contadorAtajoRef = useRef(0);
@@ -68,17 +73,48 @@ export default function PosScreen({ onIrAdmin, onIrDevoluciones }) {
   };
 
   useEffect(() => {
+    cajasFisicasApi
+      .listar()
+      .then((lista) => {
+        setCajasFisicas(lista);
+        // Si la caja física guardada ya no existe (se desactivó, etc.),
+        // se limpia para forzar a elegir de nuevo.
+        setCajaFisicaId((actual) => {
+          if (actual && !lista.some((c) => c.id === actual)) {
+            localStorage.removeItem("tramapos_caja_fisica_id");
+            return null;
+          }
+          return actual;
+        });
+      })
+      .catch(() => setCajasFisicas([]));
+  }, []);
+
+  useEffect(() => {
+    if (!cajaFisicaId) return;
+    setSesion(undefined);
     cajaApi
-      .sesionActual()
+      .sesionActual(cajaFisicaId)
       .then(setSesion)
       .catch(() => setSesion(null));
-  }, []);
+  }, [cajaFisicaId]);
+
+  const elegirCajaFisica = (id) => {
+    localStorage.setItem("tramapos_caja_fisica_id", String(id));
+    setCajaFisicaId(id);
+  };
+
+  const cambiarCajaFisica = () => {
+    localStorage.removeItem("tramapos_caja_fisica_id");
+    setCajaFisicaId(null);
+    setSesion(undefined);
+  };
 
   const abrirCaja = async () => {
     setAbriendoCaja(true);
     try {
       const nuevaSesion = await cajaApi.abrir({
-        usuario_apertura_id: USUARIO_ID_TEMPORAL,
+        caja_fisica_id: cajaFisicaId,
         monto_apertura: Number(montoApertura) || 0,
       });
       setSesion(nuevaSesion);
@@ -172,6 +208,41 @@ export default function PosScreen({ onIrAdmin, onIrDevoluciones }) {
       ),
   });
 
+  // --- Estado 0: cargando la lista de cajas físicas ---
+  if (cajasFisicas === undefined) {
+    return <div className="pos-screen__estado">Cargando cajas físicas…</div>;
+  }
+
+  // --- Estado 0.5: hay que elegir cuál caja física es este terminal ---
+  if (!cajaFisicaId) {
+    return (
+      <div className="pos-screen__apertura">
+        <Lock size={28} strokeWidth={1.5} />
+        <h1>¿Cuál caja física es esta?</h1>
+        <p>
+          Se recuerda en este computador — solo tienes que elegirla la primera
+          vez (o si cambias de equipo).
+        </p>
+        <div className="pos-screen__lista-cajas-fisicas">
+          {cajasFisicas.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => elegirCajaFisica(c.id)}
+            >
+              {c.nombre}
+            </button>
+          ))}
+        </div>
+        {cajasFisicas.length === 0 && (
+          <p className="pos-screen__venta-actual-vacio">
+            No hay cajas físicas configuradas — créalas desde Administración.
+          </p>
+        )}
+      </div>
+    );
+  }
+
   // --- Estado 1: verificando si hay sesión abierta ---
   if (sesion === undefined) {
     return (
@@ -181,13 +252,16 @@ export default function PosScreen({ onIrAdmin, onIrDevoluciones }) {
 
   // --- Estado 2: no hay sesión — bloquear venta hasta abrir caja ---
   if (sesion === null) {
+    const nombreCajaFisica = cajasFisicas.find(
+      (c) => c.id === cajaFisicaId,
+    )?.nombre;
     return (
       <div className="pos-screen__apertura">
         <Lock size={28} strokeWidth={1.5} />
         <h1>Apertura de caja</h1>
         <p>
-          No hay una sesión de caja abierta. Ingresa el monto inicial para
-          empezar a vender.
+          {nombreCajaFisica} no tiene una sesión abierta. Ingresa el monto
+          inicial para empezar a vender.
         </p>
         <input
           type="number"
@@ -205,6 +279,13 @@ export default function PosScreen({ onIrAdmin, onIrDevoluciones }) {
         >
           {abriendoCaja ? "Abriendo…" : "Abrir caja"}
         </button>
+        <button
+          type="button"
+          className="pos-screen__cambiar-caja-fisica"
+          onClick={cambiarCajaFisica}
+        >
+          Cambiar caja física
+        </button>
       </div>
     );
   }
@@ -215,7 +296,8 @@ export default function PosScreen({ onIrAdmin, onIrDevoluciones }) {
       <header className="pos-screen__topbar">
         <span className="pos-screen__marca">TramaPos</span>
         <span className="pos-screen__sesion">
-          Caja #{sesion.id} · sesión abierta
+          {cajasFisicas.find((c) => c.id === cajaFisicaId)?.nombre} · Caja #
+          {sesion.id} · sesión abierta
         </span>
         <span className="pos-screen__atajos">
           <Keyboard size={14} strokeWidth={2} />
@@ -243,13 +325,24 @@ export default function PosScreen({ onIrAdmin, onIrDevoluciones }) {
           <Lock size={14} strokeWidth={2} />
           Cerrar caja
         </button>
+        {usuario.rol === "ADMIN" && (
+          <button
+            type="button"
+            className="pos-screen__admin-btn"
+            onClick={onIrAdmin}
+          >
+            <Settings size={14} strokeWidth={2} />
+            Administración
+          </button>
+        )}
+        <span className="pos-screen__usuario">{usuario.nombre_completo}</span>
         <button
           type="button"
-          className="pos-screen__admin-btn"
-          onClick={onIrAdmin}
+          className="pos-screen__logout-btn"
+          onClick={logout}
+          title="Cerrar sesión"
         >
-          <Settings size={14} strokeWidth={2} />
-          Administración
+          <LogOut size={14} strokeWidth={2} />
         </button>
       </header>
 
@@ -351,6 +444,8 @@ export default function PosScreen({ onIrAdmin, onIrDevoluciones }) {
             <p className="pos-screen__ultima-venta">
               Última venta #{ultimaVenta.id} — total $
               {ultimaVenta.total.toLocaleString("es-CO")}
+              {ultimaVenta.total_iva > 0 &&
+                ` (incluye IVA: $${ultimaVenta.total_iva.toLocaleString("es-CO")})`}
             </p>
           )}
 

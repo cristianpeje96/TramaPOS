@@ -15,23 +15,34 @@ from app.modules.caja.models import EstadoSesionCaja, SesionCaja
 from app.modules.ventas.models import EstadoVenta, MetodoPago, Venta
 
 
-async def obtener_sesion_abierta(db: AsyncSession) -> SesionCaja | None:
-    query = select(SesionCaja).where(SesionCaja.estado == EstadoSesionCaja.ABIERTA)
+async def obtener_sesion_abierta(db: AsyncSession, caja_fisica_id: int) -> SesionCaja | None:
+    query = select(SesionCaja).where(
+        SesionCaja.caja_fisica_id == caja_fisica_id,
+        SesionCaja.estado == EstadoSesionCaja.ABIERTA,
+    )
     resultado = await db.execute(query)
     return resultado.scalar_one_or_none()
 
 
+async def listar_sesiones_abiertas(db: AsyncSession) -> list[SesionCaja]:
+    """Todas las cajas físicas con sesión abierta ahora mismo (para el dashboard admin)."""
+    query = select(SesionCaja).where(SesionCaja.estado == EstadoSesionCaja.ABIERTA)
+    resultado = await db.execute(query)
+    return list(resultado.scalars().all())
+
+
 async def abrir_sesion(
-    db: AsyncSession, usuario_apertura_id: int, monto_apertura: float
+    db: AsyncSession, caja_fisica_id: int, usuario_apertura_id: int, monto_apertura: float
 ) -> SesionCaja:
-    sesion_existente = await obtener_sesion_abierta(db)
+    sesion_existente = await obtener_sesion_abierta(db, caja_fisica_id)
     if sesion_existente is not None:
         raise ValueError(
-            f"Ya existe una sesión de caja abierta (id={sesion_existente.id}). "
+            f"Esta caja física ya tiene una sesión abierta (id={sesion_existente.id}). "
             "Debe cerrarse antes de abrir una nueva."
         )
 
     sesion = SesionCaja(
+        caja_fisica_id=caja_fisica_id,
         usuario_apertura_id=usuario_apertura_id,
         monto_apertura=monto_apertura,
         estado=EstadoSesionCaja.ABIERTA,

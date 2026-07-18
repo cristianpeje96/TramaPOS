@@ -1,0 +1,207 @@
+.compras-admin {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tp-space-3);
+  max-width: 720px;
+
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: var(--tp-space-2);
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  &__subtitulo {
+    margin: var(--tp-space-3) 0 0;
+    font-size: 0.9rem;
+  }
+
+  &__ayuda {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--tp-color-text-muted);
+  }
+
+  &__error {
+    margin: 0;
+    color: var(--tp-color-danger);
+    font-size: 0.8rem;
+  }
+
+  &__exito {
+    margin: 0;
+    padding: var(--tp-space-2) var(--tp-space-3);
+    background: rgba(47, 122, 77, 0.1);
+    color: var(--tp-color-success);
+    border-radius: var(--tp-radius);
+    font-size: 0.85rem;
+  }
+
+  &__vacio {
+    color: var(--tp-color-text-muted);
+    font-size: 0.85rem;
+  }
+
+  &__campos {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1fr;
+    gap: var(--tp-space-2);
+
+    input,
+    select {
+      padding: var(--tp-space-2);
+      border: 1px solid var(--tp-color-border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+  }
+
+  &__checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--tp-color-text-muted);
+  }
+
+  &__buscador {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--tp-space-2);
+    padding: var(--tp-space-2) var(--tp-space-3);
+    background: var(--tp-color-surface);
+    border: 1px solid var(--tp-color-border);
+    border-radius: var(--tp-radius);
+    color: var(--tp-color-text-muted);
+
+    input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 0.85rem;
+    }
+  }
+
+  &__resultados {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 10;
+    max-height: 260px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--tp-space-2);
+    padding: var(--tp-space-2);
+    background: var(--tp-color-surface);
+    border: 1px solid var(--tp-color-border);
+    border-radius: var(--tp-radius);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  &__resultado-producto {
+    p {
+      margin: 0 0 4px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+  }
+
+  &__resultado-variantes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    button {
+      padding: 4px 10px;
+      background: var(--tp-color-bg);
+      border: 1px solid var(--tp-color-border);
+      border-radius: 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+
+      &:hover {
+        border-color: var(--tp-color-primary);
+      }
+    }
+  }
+
+  &__lineas,
+  &__historial {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--tp-color-surface);
+    border: 1px solid var(--tp-color-border);
+    border-radius: var(--tp-radius);
+    overflow: hidden;
+    font-size: 0.82rem;
+
+    th {
+      text-align: left;
+      padding: var(--tp-space-2) var(--tp-space-3);
+      background: var(--tp-color-bg);
+      color: var(--tp-color-text-muted);
+      font-weight: 600;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+    }
+
+    td {
+      padding: var(--tp-space-2) var(--tp-space-3);
+      border-top: 1px solid var(--tp-color-border);
+
+      input {
+        width: 70px;
+        padding: 3px 6px;
+        border: 1px solid var(--tp-color-border);
+        border-radius: 6px;
+        font-size: 0.8rem;
+      }
+
+      button {
+        background: none;
+        border: none;
+        color: var(--tp-color-text-muted);
+        cursor: pointer;
+
+        &:hover {
+          color: var(--tp-color-danger);
+        }
+      }
+    }
+  }
+
+  &__fila--anulada {
+    opacity: 0.5;
+  }
+
+  &__total {
+    align-self: flex-end;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--tp-color-primary);
+  }
+
+  &__registrar {
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: var(--tp-space-2) var(--tp-space-4);
+    background: var(--tp-color-primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--tp-radius);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}

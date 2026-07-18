@@ -1,12 +1,13 @@
 """
 TramaPos · Router del módulo ventas.
 Prefijo montado en main.py como /api/v1/ventas.
+Todos los endpoints requieren estar logueado (cajero o admin) — tanto
+cajeros como admins necesitan listar/ver ventas para hacer devoluciones.
 
 El envío a la DIAN se dispara como BackgroundTask para no bloquear la
 respuesta HTTP (y por lo tanto no bloquear la impresión del ticket en
 el frontend, que espera esta respuesta antes de avisarle al agente de
-hardware). La función real de envío vive en el módulo facturacion_dian
-(siguiente en la lista) — aquí solo se encola.
+hardware). La función real de envío vive en el módulo facturacion_dian.
 """
 
 from datetime import date
@@ -14,7 +15,9 @@ from datetime import date
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.dependencies import obtener_usuario_actual
 from app.db.session import get_db
+from app.modules.usuarios.models import Usuario
 from app.modules.ventas import service
 from app.modules.ventas.models import CanalVenta
 from app.modules.ventas.schemas import VentaCrear, VentaOut
@@ -28,13 +31,18 @@ async def listar_ventas(
     sesion_caja_id: int | None = Query(default=None),
     fecha: date | None = Query(default=None, description="Filtra ventas de un día completo"),
     db: AsyncSession = Depends(get_db),
+    _usuario: Usuario = Depends(obtener_usuario_actual),
 ):
     """Historial de ventas — lo usa Administración y el buscador de Devoluciones."""
     return await service.listar_ventas(db, canal=canal, sesion_caja_id=sesion_caja_id, fecha=fecha)
 
 
 @router.get("/{venta_id}", response_model=VentaOut)
-async def obtener_venta(venta_id: int, db: AsyncSession = Depends(get_db)):
+async def obtener_venta(
+    venta_id: int,
+    db: AsyncSession = Depends(get_db),
+    _usuario: Usuario = Depends(obtener_usuario_actual),
+):
     venta = await service.obtener_venta(db, venta_id)
     if venta is None:
         raise HTTPException(status_code=404, detail="Venta no encontrada")
@@ -46,9 +54,10 @@ async def crear_venta(
     datos: VentaCrear,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
+    usuario: Usuario = Depends(obtener_usuario_actual),
 ):
     try:
-        venta = await service.procesar_venta(db, datos)
+        venta = await service.procesar_venta(db, datos, vendedor_id=usuario.id)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

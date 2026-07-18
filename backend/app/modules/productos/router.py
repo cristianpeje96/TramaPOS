@@ -1,12 +1,18 @@
 """
 TramaPos · Router del módulo productos.
 Prefijo montado en main.py como /api/v1/productos.
+
+Endpoints de solo lectura usados por el POS (buscar, codigo, favoritos,
+mas-vendidos): cualquier usuario logueado (cajero o admin).
+Endpoints de administración (crear, editar, carga masiva, stock-bajo,
+listado completo): solo ADMIN.
 """
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.dependencies import obtener_usuario_actual, requiere_rol
 from app.db.session import get_db
 from app.modules.productos import carga_masiva, service
 from app.modules.productos.schemas import (
@@ -18,6 +24,7 @@ from app.modules.productos.schemas import (
     VarianteProductoActualizar,
     VarianteProductoOut,
 )
+from app.modules.usuarios.models import RolUsuario, Usuario
 
 router = APIRouter(prefix="/productos", tags=["productos"])
 
@@ -26,13 +33,18 @@ router = APIRouter(prefix="/productos", tags=["productos"])
 async def listar_productos(
     incluir_inactivos: bool = Query(default=False),
     db: AsyncSession = Depends(get_db),
+    _admin: Usuario = Depends(requiere_rol(RolUsuario.ADMIN)),
 ):
     """Listado completo — lo usa la pantalla de administración, no el POS."""
     return await service.listar_productos(db, incluir_inactivos=incluir_inactivos)
 
 
 @router.post("", response_model=ProductoOut, status_code=201)
-async def crear_producto(datos: ProductoCrear, db: AsyncSession = Depends(get_db)):
+async def crear_producto(
+    datos: ProductoCrear,
+    db: AsyncSession = Depends(get_db),
+    _admin: Usuario = Depends(requiere_rol(RolUsuario.ADMIN)),
+):
     try:
         return await service.crear_producto(db, datos)
     except ValueError as exc:
@@ -43,13 +55,18 @@ async def crear_producto(datos: ProductoCrear, db: AsyncSession = Depends(get_db
 async def buscar_productos(
     q: str = Query(min_length=1, description="Texto a buscar, ej: 'Guajira'"),
     db: AsyncSession = Depends(get_db),
+    _usuario: Usuario = Depends(obtener_usuario_actual),
 ):
     """Usado por el buscador del POS (F2) — pensado para autocompletar mientras se escribe."""
     return await service.buscar_productos(db, q)
 
 
 @router.get("/codigo/{codigo}", response_model=ProductoOut)
-async def buscar_por_codigo(codigo: str, db: AsyncSession = Depends(get_db)):
+async def buscar_por_codigo(
+    codigo: str,
+    db: AsyncSession = Depends(get_db),
+    _usuario: Usuario = Depends(obtener_usuario_actual),
+):
     """Usado por el lector de código de barras en caja."""
     variante = await service.obtener_variante_por_codigo(db, codigo)
     if variante is None:
@@ -58,7 +75,10 @@ async def buscar_por_codigo(codigo: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/stock-bajo", response_model=list[StockBajoOut])
-async def stock_bajo(db: AsyncSession = Depends(get_db)):
+async def stock_bajo(
+    db: AsyncSession = Depends(get_db),
+    _admin: Usuario = Depends(requiere_rol(RolUsuario.ADMIN)),
+):
     """Alertas de stock mínimo para el dashboard."""
     variantes = await service.listar_stock_bajo(db)
     return [
@@ -75,7 +95,10 @@ async def stock_bajo(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/favoritos", response_model=list[ProductoDestacadoOut])
-async def favoritos(db: AsyncSession = Depends(get_db)):
+async def favoritos(
+    db: AsyncSession = Depends(get_db),
+    _usuario: Usuario = Depends(obtener_usuario_actual),
+):
     """Productos marcados por el cajero — acceso rápido en el POS."""
     variantes = await service.listar_favoritos(db)
     return [
@@ -98,6 +121,7 @@ async def mas_vendidos(
     limite: int = Query(default=6, ge=1, le=20),
     dias: int = Query(default=30, ge=1),
     db: AsyncSession = Depends(get_db),
+    _usuario: Usuario = Depends(obtener_usuario_actual),
 ):
     """Top variantes por cantidad vendida en los últimos `dias` días."""
     resultados = await service.listar_mas_vendidos(db, limite=limite, dias=dias)
@@ -119,7 +143,10 @@ async def mas_vendidos(
 
 @router.patch("/{producto_id}", response_model=ProductoOut)
 async def actualizar_producto(
-    producto_id: int, datos: ProductoActualizar, db: AsyncSession = Depends(get_db)
+    producto_id: int,
+    datos: ProductoActualizar,
+    db: AsyncSession = Depends(get_db),
+    _admin: Usuario = Depends(requiere_rol(RolUsuario.ADMIN)),
 ):
     try:
         return await service.actualizar_producto(db, producto_id, datos)
@@ -129,7 +156,10 @@ async def actualizar_producto(
 
 @router.patch("/variantes/{variante_id}", response_model=VarianteProductoOut)
 async def actualizar_variante(
-    variante_id: int, datos: VarianteProductoActualizar, db: AsyncSession = Depends(get_db)
+    variante_id: int,
+    datos: VarianteProductoActualizar,
+    db: AsyncSession = Depends(get_db),
+    _admin: Usuario = Depends(requiere_rol(RolUsuario.ADMIN)),
 ):
     try:
         return await service.actualizar_variante(db, variante_id, datos)
@@ -139,7 +169,7 @@ async def actualizar_variante(
 
 
 @router.get("/plantilla")
-async def descargar_plantilla():
+async def descargar_plantilla(_admin: Usuario = Depends(requiere_rol(RolUsuario.ADMIN))):
     """Excel descargable con las columnas esperadas + una fila de ejemplo."""
     contenido = carga_masiva.generar_plantilla()
     return Response(
@@ -151,7 +181,9 @@ async def descargar_plantilla():
 
 @router.post("/carga-masiva")
 async def cargar_masivamente(
-    archivo: UploadFile = File(...), db: AsyncSession = Depends(get_db)
+    archivo: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    _admin: Usuario = Depends(requiere_rol(RolUsuario.ADMIN)),
 ):
     """
     Sube el Excel lleno a partir de la plantilla. Agrupa variantes por

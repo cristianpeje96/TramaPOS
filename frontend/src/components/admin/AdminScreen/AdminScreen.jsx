@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Package,
@@ -6,6 +6,11 @@ import {
   Receipt,
   Gift,
   Award,
+  Percent,
+  Store,
+  Truck,
+  ShoppingBag,
+  BarChart2,
 } from "lucide-react";
 
 import ProductosAdmin from "../ProductosAdmin/ProductosAdmin";
@@ -13,9 +18,21 @@ import StockBajoPanel from "../StockBajoPanel/StockBajoPanel";
 import HistorialVentas from "../HistorialVentas/HistorialVentas";
 import HistorialPuntos from "../HistorialPuntos/HistorialPuntos";
 import ConfiguracionFidelizacion from "../ConfiguracionFidelizacion/ConfiguracionFidelizacion";
+import ConfiguracionIVA from "../ConfiguracionIVA/ConfiguracionIVA";
+import CajasFisicasAdmin from "../CajasFisicasAdmin/CajasFisicasAdmin";
+import ProveedoresAdmin from "../ProveedoresAdmin/ProveedoresAdmin";
+import ComprasAdmin from "../ComprasAdmin/ComprasAdmin";
+import ReportesAdmin from "../Reportesadmin/ReportesAdmin";
+import { useAuth } from "../../Auth/AuthProvider";
 import "./AdminScreen.scss";
 
 const PESTANAS = [
+  {
+    id: "reportes",
+    label: "Reportes",
+    icon: BarChart2,
+    Componente: ReportesAdmin,
+  },
   {
     id: "productos",
     label: "Productos",
@@ -46,11 +63,44 @@ const PESTANAS = [
     icon: Award,
     Componente: ConfiguracionFidelizacion,
   },
+  { id: "iva", label: "IVA", icon: Percent, Componente: ConfiguracionIVA },
+  {
+    id: "cajas",
+    label: "Cajas físicas",
+    icon: Store,
+    Componente: CajasFisicasAdmin,
+  },
+  {
+    id: "proveedores",
+    label: "Proveedores",
+    icon: Truck,
+    Componente: ProveedoresAdmin,
+  },
+  {
+    id: "compras",
+    label: "Compras",
+    icon: ShoppingBag,
+    Componente: ComprasAdmin,
+  },
 ];
 
 export default function AdminScreen({ onVolverAlPos }) {
-  const [pestanaActiva, setPestanaActiva] = useState("productos");
+  const { usuario } = useAuth();
+  const [pestanaActiva, setPestanaActiva] = useState("reportes");
   const { Componente } = PESTANAS.find((p) => p.id === pestanaActiva);
+
+  // Defensa extra: el botón para llegar aquí ya está oculto para cajeros,
+  // pero si de alguna forma entran (ej. estado viejo en memoria), los
+  // devolvemos al POS — el backend igual rechazaría cada request con 403.
+  useEffect(() => {
+    if (usuario && usuario.rol !== "ADMIN") {
+      onVolverAlPos?.();
+    }
+  }, [usuario, onVolverAlPos]);
+
+  if (!usuario || usuario.rol !== "ADMIN") {
+    return null;
+  }
 
   return (
     <div className="admin-screen">

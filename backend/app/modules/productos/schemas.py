@@ -25,6 +25,7 @@ class VarianteProductoBase(BaseModel):
     grosor: str | None = None
     precio_venta: float = Field(ge=0)
     costo_unitario: float | None = Field(default=None, ge=0)
+    porcentaje_iva: float = Field(default=19.00, ge=0, le=100)
     stock_actual: float = Field(default=0, ge=0)
     stock_minimo: float = Field(default=0, ge=0)
 
@@ -76,6 +77,7 @@ class VarianteProductoActualizar(BaseModel):
     grosor: str | None = None
     precio_venta: float | None = Field(default=None, ge=0)
     costo_unitario: float | None = Field(default=None, ge=0)
+    porcentaje_iva: float | None = Field(default=None, ge=0, le=100)
     stock_actual: float | None = Field(default=None, ge=0)
     stock_minimo: float | None = Field(default=None, ge=0)
     activo: bool | None = None

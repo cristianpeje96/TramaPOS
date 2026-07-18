@@ -67,12 +67,14 @@ class Venta(Base):
     canal: Mapped[CanalVenta] = mapped_column(SAEnum(CanalVenta, name="canal_venta"))
     sesion_caja_id: Mapped[int | None] = mapped_column(ForeignKey("sesiones_caja.id"))
     cliente_id: Mapped[int | None] = mapped_column(ForeignKey("clientes.id"))
+    vendedor_id: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id"))
     subtotal: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     descuento_puntos: Mapped[float] = mapped_column(Numeric(12, 2), default=0)
     descuento_manual: Mapped[float] = mapped_column(Numeric(12, 2), default=0)
     motivo_descuento_manual: Mapped[str | None] = mapped_column(String(255))
     descuento_fidelizacion: Mapped[float] = mapped_column(Numeric(12, 2), default=0)
     rango_fidelizacion_aplicado: Mapped[str | None] = mapped_column(String(50))
+    total_iva: Mapped[float] = mapped_column(Numeric(12, 2), default=0)
     total: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     metodo_pago: Mapped[MetodoPago] = mapped_column(SAEnum(MetodoPago, name="metodo_pago"))
     estado: Mapped[EstadoVenta] = mapped_column(
@@ -103,6 +105,8 @@ class DetalleVenta(Base):
     )
     cantidad: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     precio_unitario: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    porcentaje_iva_aplicado: Mapped[float] = mapped_column(Numeric(5, 2), default=0)
+    iva_linea: Mapped[float] = mapped_column(Numeric(12, 2), default=0)
 
     venta: Mapped[Venta] = relationship(back_populates="detalles")
     variante: Mapped["VarianteProducto"] = relationship()

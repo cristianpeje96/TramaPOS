@@ -1,0 +1,123 @@
+.reportes-admin {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tp-space-3);
+  max-width: 900px;
+
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: var(--tp-space-2);
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  &__subtitulo {
+    display: flex;
+    align-items: center;
+    gap: var(--tp-space-2);
+    margin: var(--tp-space-2) 0 0;
+    font-size: 0.9rem;
+  }
+
+  &__filtro-fecha {
+    display: flex;
+    align-items: center;
+    gap: var(--tp-space-2);
+    flex-wrap: wrap;
+    color: var(--tp-color-text-muted);
+    font-size: 0.85rem;
+
+    input[type="date"] {
+      padding: var(--tp-space-1) var(--tp-space-2);
+      border: 1px solid var(--tp-color-border);
+      border-radius: 8px;
+      font-size: 0.82rem;
+    }
+
+    button {
+      padding: 5px 12px;
+      background: var(--tp-color-surface);
+      border: 1px solid var(--tp-color-border);
+      border-radius: 999px;
+      font-size: 0.78rem;
+      color: var(--tp-color-text-muted);
+      cursor: pointer;
+
+      &:hover {
+        border-color: var(--tp-color-primary);
+        color: var(--tp-color-primary);
+      }
+    }
+  }
+
+  &__error {
+    margin: 0;
+    color: var(--tp-color-danger);
+    font-size: 0.8rem;
+  }
+
+  &__vacio {
+    color: var(--tp-color-text-muted);
+    font-size: 0.85rem;
+  }
+
+  &__resumen {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--tp-space-2);
+  }
+
+  &__tarjeta-resumen {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: var(--tp-space-3);
+    background: var(--tp-color-surface);
+    border: 1px solid var(--tp-color-border);
+    border-radius: var(--tp-radius);
+  }
+
+  &__resumen-label {
+    font-size: 0.75rem;
+    color: var(--tp-color-text-muted);
+  }
+
+  &__resumen-valor {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--tp-color-primary);
+  }
+
+  &__grafica {
+    padding: var(--tp-space-3);
+    background: var(--tp-color-surface);
+    border: 1px solid var(--tp-color-border);
+    border-radius: var(--tp-radius);
+  }
+
+  &__tabla {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--tp-color-surface);
+    border: 1px solid var(--tp-color-border);
+    border-radius: var(--tp-radius);
+    overflow: hidden;
+    font-size: 0.82rem;
+
+    th {
+      text-align: left;
+      padding: var(--tp-space-2) var(--tp-space-3);
+      background: var(--tp-color-bg);
+      color: var(--tp-color-text-muted);
+      font-weight: 600;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+    }
+
+    td {
+      padding: var(--tp-space-2) var(--tp-space-3);
+      border-top: 1px solid var(--tp-color-border);
+    }
+  }
+}

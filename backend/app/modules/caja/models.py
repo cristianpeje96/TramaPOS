@@ -10,7 +10,7 @@ incluirla en INSERT/UPDATE — Postgres la calcula sola.
 from datetime import datetime
 from enum import Enum as PyEnum
 
-from sqlalchemy import Computed, DateTime, Numeric, func
+from sqlalchemy import Computed, DateTime, ForeignKey, Numeric, func
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -26,6 +26,7 @@ class SesionCaja(Base):
     __tablename__ = "sesiones_caja"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    caja_fisica_id: Mapped[int] = mapped_column(ForeignKey("cajas_fisicas.id"), nullable=False)
     usuario_apertura_id: Mapped[int] = mapped_column(nullable=False)
     usuario_cierre_id: Mapped[int | None] = mapped_column()
     monto_apertura: Mapped[float] = mapped_column(Numeric(12, 2), default=0)

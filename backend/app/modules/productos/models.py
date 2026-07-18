@@ -63,6 +63,7 @@ class VarianteProducto(Base):
     atributos_extra: Mapped[dict] = mapped_column(JSONB, default=dict)
     precio_venta: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     costo_unitario: Mapped[float | None] = mapped_column(Numeric(12, 2))
+    porcentaje_iva: Mapped[float] = mapped_column(Numeric(5, 2), default=19.00)
     stock_actual: Mapped[float] = mapped_column(Numeric(12, 2), default=0)
     stock_minimo: Mapped[float] = mapped_column(Numeric(12, 2), default=0)
     activo: Mapped[bool] = mapped_column(default=True)

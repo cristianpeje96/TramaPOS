@@ -75,6 +75,7 @@ export default function HistorialVentas() {
               <th>Canal</th>
               <th>Método pago</th>
               <th>Total</th>
+              <th>IVA</th>
               <th>Puntos</th>
               <th>Factura DIAN</th>
             </tr>
@@ -104,6 +105,11 @@ export default function HistorialVentas() {
                 <td>{venta.metodo_pago}</td>
                 <td className="u-cifra">
                   ${venta.total.toLocaleString("es-CO")}
+                </td>
+                <td className="u-cifra">
+                  {venta.total_iva > 0
+                    ? `$${venta.total_iva.toLocaleString("es-CO")}`
+                    : "—"}
                 </td>
                 <td className="u-cifra">
                   {venta.puntos_ganados > 0 && `+${venta.puntos_ganados}`}

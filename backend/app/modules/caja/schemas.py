@@ -10,18 +10,18 @@ from app.modules.caja.models import EstadoSesionCaja
 
 
 class AbrirCajaIn(BaseModel):
-    usuario_apertura_id: int
+    caja_fisica_id: int
     monto_apertura: float = Field(ge=0)
 
 
 class CerrarCajaIn(BaseModel):
-    usuario_cierre_id: int
     monto_cierre_real: float = Field(ge=0)
 
 
 class SesionCajaOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    caja_fisica_id: int
     usuario_apertura_id: int
     usuario_cierre_id: int | None
     monto_apertura: float

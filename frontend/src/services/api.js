@@ -14,10 +14,25 @@ const apiClient = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+// --- Interceptor de autenticación: agrega el token a cada request ---
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem("tramapos_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // --- Interceptor de errores: normaliza el mensaje de error del backend ---
 apiClient.interceptors.response.use(
   (respuesta) => respuesta,
   (error) => {
+    // Token vencido o inválido: limpia la sesión y fuerza volver al login.
+    if (error.response?.status === 401) {
+      localStorage.removeItem("tramapos_token");
+      localStorage.removeItem("tramapos_usuario");
+      window.location.reload();
+    }
     const mensaje =
       error.response?.data?.detail ||
       error.message ||
@@ -25,6 +40,61 @@ apiClient.interceptors.response.use(
     return Promise.reject(new Error(mensaje));
   },
 );
+
+// =====================================================================
+// AUTENTICACIÓN
+// =====================================================================
+export const authApi = {
+  login: (username, password) =>
+    apiClient.post("/auth/login", { username, password }).then((r) => r.data),
+  me: () => apiClient.get("/auth/me").then((r) => r.data),
+};
+
+export const usuariosApi = {
+  listar: () => apiClient.get("/usuarios").then((r) => r.data),
+  crear: (datos) => apiClient.post("/usuarios", datos).then((r) => r.data),
+};
+
+export const configuracionEmpresaApi = {
+  obtener: () => apiClient.get("/configuracion-empresa").then((r) => r.data),
+  actualizar: (datos) =>
+    apiClient.patch("/configuracion-empresa", datos).then((r) => r.data),
+};
+
+export const proveedoresApi = {
+  listar: () => apiClient.get("/proveedores").then((r) => r.data),
+  buscar: (texto) =>
+    apiClient
+      .get("/proveedores/buscar", { params: { q: texto } })
+      .then((r) => r.data),
+  crear: (datos) => apiClient.post("/proveedores", datos).then((r) => r.data),
+  actualizar: (id, datos) =>
+    apiClient.patch(`/proveedores/${id}`, datos).then((r) => r.data),
+};
+
+export const comprasApi = {
+  listar: (params = {}) =>
+    apiClient.get("/compras", { params }).then((r) => r.data),
+  obtener: (id) => apiClient.get(`/compras/${id}`).then((r) => r.data),
+  crear: (datos) => apiClient.post("/compras", datos).then((r) => r.data),
+  anular: (id, motivo) =>
+    apiClient.post(`/compras/${id}/anular`, { motivo }).then((r) => r.data),
+};
+
+export const reportesApi = {
+  resumen: (params = {}) =>
+    apiClient.get("/reportes/resumen", { params }).then((r) => r.data),
+  ventasPorDia: (params = {}) =>
+    apiClient.get("/reportes/ventas-por-dia", { params }).then((r) => r.data),
+  ventasPorMes: (meses = 12) =>
+    apiClient
+      .get("/reportes/ventas-por-mes", { params: { meses } })
+      .then((r) => r.data),
+  productosMasVendidos: (params = {}) =>
+    apiClient
+      .get("/reportes/productos-mas-vendidos", { params })
+      .then((r) => r.data),
+};
 
 // =====================================================================
 // PRODUCTOS
@@ -122,12 +192,21 @@ export const ventasApi = {
 // CAJA
 // =====================================================================
 export const cajaApi = {
-  sesionActual: () => apiClient.get("/caja/actual").then((r) => r.data),
+  sesionActual: (cajaFisicaId) =>
+    apiClient
+      .get("/caja/actual", { params: { caja_fisica_id: cajaFisicaId } })
+      .then((r) => r.data),
+  sesionesAbiertas: () => apiClient.get("/caja/abiertas").then((r) => r.data),
   abrir: (datos) => apiClient.post("/caja/abrir", datos).then((r) => r.data),
   previewCierre: (sesionId) =>
     apiClient.get(`/caja/${sesionId}/preview-cierre`).then((r) => r.data),
   cerrar: (sesionId, datos) =>
     apiClient.post(`/caja/${sesionId}/cerrar`, datos).then((r) => r.data),
+};
+
+export const cajasFisicasApi = {
+  listar: () => apiClient.get("/cajas-fisicas").then((r) => r.data),
+  crear: (datos) => apiClient.post("/cajas-fisicas", datos).then((r) => r.data),
 };
 
 export const devolucionesApi = {

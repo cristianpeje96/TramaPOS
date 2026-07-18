@@ -4,9 +4,6 @@ import { X, Lock, CheckCircle2 } from "lucide-react";
 import { cajaApi } from "../../services/api";
 import "./CierreCajaModal.scss";
 
-// TODO: reemplazar por el id del usuario autenticado cuando exista login.
-const USUARIO_ID_TEMPORAL = 1;
-
 /**
  * CierreCajaModal
  * Arqueo de caja: muestra cuánto DEBERÍA haber en efectivo según el
@@ -44,7 +41,6 @@ export default function CierreCajaModal({ sesion, onCerrar, onCajaCerrada }) {
     setError(null);
     try {
       const sesionCerrada = await cajaApi.cerrar(sesion.id, {
-        usuario_cierre_id: USUARIO_ID_TEMPORAL,
         monto_cierre_real: Number(montoReal) || 0,
       });
       onCajaCerrada?.(sesionCerrada);

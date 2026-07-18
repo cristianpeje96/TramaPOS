@@ -22,6 +22,7 @@ const VARIANTE_VACIA = {
   grosor: "",
   precio_venta: "",
   costo_unitario: "",
+  porcentaje_iva: "19",
   stock_actual: "",
   stock_minimo: "",
 };
@@ -110,6 +111,7 @@ export default function ProductosAdmin() {
           grosor: v.grosor.trim() || null,
           precio_venta: Number(v.precio_venta),
           costo_unitario: v.costo_unitario ? Number(v.costo_unitario) : null,
+          porcentaje_iva: Number(v.porcentaje_iva) || 0,
           stock_actual: Number(v.stock_actual) || 0,
           stock_minimo: Number(v.stock_minimo) || 0,
         })),
@@ -161,6 +163,7 @@ export default function ProductosAdmin() {
         grosor: v.grosor || "",
         precio_venta: v.precio_venta,
         costo_unitario: v.costo_unitario ?? "",
+        porcentaje_iva: v.porcentaje_iva ?? 19,
         stock_actual: v.stock_actual,
         stock_minimo: v.stock_minimo,
       })),
@@ -200,6 +203,7 @@ export default function ProductosAdmin() {
             grosor: v.grosor.trim() || null,
             precio_venta: Number(v.precio_venta),
             costo_unitario: v.costo_unitario ? Number(v.costo_unitario) : null,
+            porcentaje_iva: Number(v.porcentaje_iva) || 0,
             stock_actual: Number(v.stock_actual),
             stock_minimo: Number(v.stock_minimo),
           }),
@@ -404,6 +408,16 @@ export default function ProductosAdmin() {
                 <input
                   type="number"
                   min="0"
+                  max="100"
+                  placeholder="% IVA"
+                  value={variante.porcentaje_iva}
+                  onChange={(e) =>
+                    actualizarVariante(indice, "porcentaje_iva", e.target.value)
+                  }
+                />
+                <input
+                  type="number"
+                  min="0"
                   placeholder="Stock inicial"
                   value={variante.stock_actual}
                   onChange={(e) =>
@@ -584,6 +598,20 @@ export default function ProductosAdmin() {
                               actualizarVarianteEdicion(
                                 indice,
                                 "costo_unitario",
+                                e.target.value,
+                              )
+                            }
+                          />
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            placeholder="% IVA"
+                            value={variante.porcentaje_iva}
+                            onChange={(e) =>
+                              actualizarVarianteEdicion(
+                                indice,
+                                "porcentaje_iva",
                                 e.target.value,
                               )
                             }

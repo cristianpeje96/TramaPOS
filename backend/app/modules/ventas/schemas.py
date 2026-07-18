@@ -50,6 +50,8 @@ class LineaVentaOut(BaseModel):
     variante_id: int
     cantidad: float
     precio_unitario: float
+    porcentaje_iva_aplicado: float
+    iva_linea: float
     producto_nombre: str
     color: str | None = None
     grosor: str | None = None
@@ -62,12 +64,14 @@ class VentaOut(BaseModel):
     uuid_publico: uuid.UUID
     canal: CanalVenta
     cliente_id: int | None
+    vendedor_id: int | None
     subtotal: float
     descuento_puntos: float
     descuento_manual: float
     motivo_descuento_manual: str | None
     descuento_fidelizacion: float
     rango_fidelizacion_aplicado: str | None
+    total_iva: float
     total: float
     metodo_pago: MetodoPago
     estado: EstadoVenta
