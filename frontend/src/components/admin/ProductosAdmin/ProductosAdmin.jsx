@@ -11,7 +11,7 @@ import {
   Star,
 } from "lucide-react";
 
-import { productosApi } from "../../../services/api";
+import { productosApi, categoriasApi } from "../../../services/api";
 import { SkeletonFilas } from "../../Skeleton/Skeleton";
 import "./ProductosAdmin.scss";
 
@@ -32,6 +32,10 @@ export default function ProductosAdmin() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
+  const [categorias, setCategorias] = useState([]);
+  const [categoriaId, setCategoriaId] = useState("");
+  const [nuevaCategoriaNombre, setNuevaCategoriaNombre] = useState("");
+  const [creandoCategoria, setCreandoCategoria] = useState(false);
 
   // --- Creación de producto nuevo ---
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -63,8 +67,31 @@ export default function ProductosAdmin() {
 
   useEffect(() => {
     cargarProductos();
+    categoriasApi
+      .listar()
+      .then(setCategorias)
+      .catch(() => setCategorias([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mostrarInactivos]);
+
+  const crearCategoriaRapida = async () => {
+    if (!nuevaCategoriaNombre.trim()) return;
+    setCreandoCategoria(true);
+    try {
+      const categoria = await categoriasApi.crear({
+        nombre: nuevaCategoriaNombre.trim(),
+      });
+      setCategorias((prev) =>
+        [...prev, categoria].sort((a, b) => a.nombre.localeCompare(b.nombre)),
+      );
+      setCategoriaId(String(categoria.id));
+      setNuevaCategoriaNombre("");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCreandoCategoria(false);
+    }
+  };
 
   // ================= Creación =================
   const actualizarVariante = (indice, campo, valor) => {
@@ -82,6 +109,7 @@ export default function ProductosAdmin() {
     setNombre("");
     setDescripcion("");
     setUnidadMedida("unidad");
+    setCategoriaId("");
     setVariantes([{ ...VARIANTE_VACIA }]);
     setMostrarFormulario(false);
   };
@@ -103,6 +131,7 @@ export default function ProductosAdmin() {
         nombre: nombre.trim(),
         descripcion: descripcion.trim() || null,
         unidad_medida: unidadMedida,
+        categoria_id: categoriaId ? Number(categoriaId) : null,
         visible_web: false,
         variantes: variantes.map((v) => ({
           sku: v.sku.trim(),
@@ -154,6 +183,7 @@ export default function ProductosAdmin() {
       nombre: producto.nombre,
       descripcion: producto.descripcion || "",
       unidad_medida: producto.unidad_medida,
+      categoria_id: producto.categoria_id || "",
       activo: producto.activo,
       variantes: producto.variantes.map((v) => ({
         id: v.id,
@@ -191,6 +221,9 @@ export default function ProductosAdmin() {
         nombre: edicion.nombre.trim(),
         descripcion: edicion.descripcion.trim() || null,
         unidad_medida: edicion.unidad_medida,
+        categoria_id: edicion.categoria_id
+          ? Number(edicion.categoria_id)
+          : null,
         activo: edicion.activo,
       });
 
@@ -349,6 +382,33 @@ export default function ProductosAdmin() {
               <option value="metro">Metro</option>
               <option value="kg">Peso (kg / gramos en el POS)</option>
             </select>
+            <select
+              value={categoriaId}
+              onChange={(e) => setCategoriaId(e.target.value)}
+            >
+              <option value="">Sin categoría</option>
+              {categorias.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="productos-admin__nueva-categoria">
+            <input
+              type="text"
+              placeholder="O crea una categoría nueva (ej: Mercería)"
+              value={nuevaCategoriaNombre}
+              onChange={(e) => setNuevaCategoriaNombre(e.target.value)}
+            />
+            <button
+              type="button"
+              disabled={creandoCategoria}
+              onClick={crearCategoriaRapida}
+            >
+              {creandoCategoria ? "Creando…" : "Crear categoría"}
+            </button>
           </div>
 
           <p className="productos-admin__subtitulo">Variantes (color/grosor)</p>
@@ -509,6 +569,19 @@ export default function ProductosAdmin() {
                         <option value="madeja">Madeja</option>
                         <option value="metro">Metro</option>
                         <option value="kg">Peso (kg / gramos en el POS)</option>
+                      </select>
+                      <select
+                        value={edicion.categoria_id}
+                        onChange={(e) =>
+                          actualizarCampoEdicion("categoria_id", e.target.value)
+                        }
+                      >
+                        <option value="">Sin categoría</option>
+                        {categorias.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.nombre}
+                          </option>
+                        ))}
                       </select>
                       <label className="productos-admin__checkbox-activo">
                         <input

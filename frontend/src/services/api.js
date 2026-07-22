@@ -96,6 +96,13 @@ export const reportesApi = {
       .then((r) => r.data),
 };
 
+export const asistenteIaApi = {
+  consultar: (mensaje, historial = []) =>
+    apiClient
+      .post("/asistente-ia/consultar", { mensaje, historial })
+      .then((r) => r.data),
+};
+
 // =====================================================================
 // PRODUCTOS
 // =====================================================================
@@ -111,6 +118,8 @@ export const productosApi = {
   buscarPorCodigo: (codigo) =>
     apiClient.get(`/productos/codigo/${codigo}`).then((r) => r.data),
   crear: (datos) => apiClient.post("/productos", datos).then((r) => r.data),
+  altaRapida: (datos) =>
+    apiClient.post("/productos/alta-rapida", datos).then((r) => r.data),
   actualizar: (id, datos) =>
     apiClient.patch(`/productos/${id}`, datos).then((r) => r.data),
   actualizarVariante: (varianteId, datos) =>
@@ -134,6 +143,13 @@ export const productosApi = {
       })
       .then((r) => r.data);
   },
+};
+
+export const categoriasApi = {
+  listar: () => apiClient.get("/categorias").then((r) => r.data),
+  crear: (datos) => apiClient.post("/categorias", datos).then((r) => r.data),
+  actualizar: (id, datos) =>
+    apiClient.patch(`/categorias/${id}`, datos).then((r) => r.data),
 };
 
 // =====================================================================
@@ -213,6 +229,22 @@ export const devolucionesApi = {
   crear: (datos) => apiClient.post("/devoluciones", datos).then((r) => r.data),
   obtenerPorVenta: (ventaId) =>
     apiClient.get(`/devoluciones/venta/${ventaId}`).then((r) => r.data),
+};
+
+export const finanzasApi = {
+  listarCategorias: () =>
+    apiClient.get("/finanzas/categorias").then((r) => r.data),
+  crearCategoria: (datos) =>
+    apiClient.post("/finanzas/categorias", datos).then((r) => r.data),
+  listarMovimientos: (params = {}) =>
+    apiClient.get("/finanzas/movimientos", { params }).then((r) => r.data),
+  crearMovimiento: (datos) =>
+    apiClient.post("/finanzas/movimientos", datos).then((r) => r.data),
+  eliminarMovimiento: (id) => apiClient.delete(`/finanzas/movimientos/${id}`),
+  perdidasGanancias: (anio) =>
+    apiClient
+      .get("/finanzas/perdidas-ganancias", { params: { anio } })
+      .then((r) => r.data),
 };
 
 export default apiClient;

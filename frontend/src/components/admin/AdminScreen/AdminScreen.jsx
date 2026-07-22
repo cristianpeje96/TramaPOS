@@ -11,6 +11,8 @@ import {
   Truck,
   ShoppingBag,
   BarChart2,
+  Sparkles,
+  Wallet,
 } from "lucide-react";
 
 import ProductosAdmin from "../ProductosAdmin/ProductosAdmin";
@@ -22,7 +24,9 @@ import ConfiguracionIVA from "../ConfiguracionIVA/ConfiguracionIVA";
 import CajasFisicasAdmin from "../CajasFisicasAdmin/CajasFisicasAdmin";
 import ProveedoresAdmin from "../ProveedoresAdmin/ProveedoresAdmin";
 import ComprasAdmin from "../ComprasAdmin/ComprasAdmin";
-import ReportesAdmin from "../Reportesadmin/ReportesAdmin";
+import ReportesAdmin from "../ReportesAdmin/ReportesAdmin";
+import AsistenteIA from "../AsistenteIA/AsistenteIA";
+import FinanzasAdmin from "../FinanzasAdmin/FinanzasAdmin";
 import { useAuth } from "../../Auth/AuthProvider";
 import "./AdminScreen.scss";
 
@@ -32,6 +36,18 @@ const PESTANAS = [
     label: "Reportes",
     icon: BarChart2,
     Componente: ReportesAdmin,
+  },
+  {
+    id: "finanzas",
+    label: "Finanzas",
+    icon: Wallet,
+    Componente: FinanzasAdmin,
+  },
+  {
+    id: "asistente",
+    label: "Asistente IA",
+    icon: Sparkles,
+    Componente: AsistenteIA,
   },
   {
     id: "productos",

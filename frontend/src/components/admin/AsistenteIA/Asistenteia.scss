@@ -1,0 +1,142 @@
+.asistente-ia {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tp-space-3);
+  max-width: 640px;
+  height: 100%;
+
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: var(--tp-space-2);
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  &__ayuda {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--tp-color-text-muted);
+  }
+
+  &__error {
+    margin: 0;
+    color: var(--tp-color-danger);
+    font-size: 0.8rem;
+  }
+
+  &__chat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--tp-space-3);
+    padding: var(--tp-space-3);
+    background: var(--tp-color-surface);
+    border: 1px solid var(--tp-color-border);
+    border-radius: var(--tp-radius);
+    min-height: 320px;
+    max-height: 480px;
+    overflow-y: auto;
+  }
+
+  &__mensaje {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--tp-space-2);
+    max-width: 85%;
+  }
+
+  &__mensaje--user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+  }
+
+  &__mensaje-icono {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--tp-color-bg);
+    color: var(--tp-color-primary);
+  }
+
+  &__mensaje--user &__mensaje-icono {
+    background: var(--tp-color-primary);
+    color: #fff;
+  }
+
+  &__mensaje-texto {
+    padding: var(--tp-space-2) var(--tp-space-3);
+    border-radius: var(--tp-radius);
+    background: var(--tp-color-bg);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+
+  &__mensaje--user &__mensaje-texto {
+    background: var(--tp-color-primary);
+    color: #fff;
+  }
+
+  &__pensando {
+    color: var(--tp-color-text-muted);
+    font-style: italic;
+  }
+
+  &__sugeridas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--tp-space-2);
+
+    button {
+      padding: 6px 12px;
+      background: var(--tp-color-accent-soft);
+      border: 1px solid var(--tp-color-accent);
+      border-radius: 999px;
+      font-size: 0.78rem;
+      color: #8a611f;
+      cursor: pointer;
+
+      &:hover {
+        filter: brightness(0.97);
+      }
+    }
+  }
+
+  &__form {
+    display: flex;
+    gap: var(--tp-space-2);
+
+    input {
+      flex: 1;
+      padding: var(--tp-space-2) var(--tp-space-3);
+      border: 1px solid var(--tp-color-border);
+      border-radius: var(--tp-radius);
+      font-size: 0.88rem;
+
+      &:focus-visible {
+        outline: 2px solid var(--tp-color-accent);
+      }
+    }
+
+    button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      background: var(--tp-color-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--tp-radius);
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+}

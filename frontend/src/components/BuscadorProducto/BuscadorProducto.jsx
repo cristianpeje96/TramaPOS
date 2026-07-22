@@ -5,28 +5,32 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Search, PackageSearch } from "lucide-react";
+import { Search, PackageSearch, Plus } from "lucide-react";
 
-import { productosApi } from "../../services/api";
+import { categoriasApi, productosApi } from "../../services/api";
+import { useToast } from "../Toast/ToastProvider";
 import "./BuscadorProducto.scss";
 
 /**
  * BuscadorProducto
- * Foco de F2. Dos formas de uso, pensadas para no frenar la fila:
+ * Foco de F2. Tres formas de uso, pensadas para no frenar la fila:
  *  1. Cajero escribe texto -> autocompletado contra GET /productos/buscar,
  *     y elige la variante (color/grosor) exacta con un click o Enter.
- *  2. Cajero usa lector de código de barras -> el lector "escribe" el
- *     código muy rápido y termina con Enter -> se intenta primero
- *     GET /productos/codigo/{codigo} (match exacto de SKU o barras) antes
- *     de tratarlo como texto de búsqueda libre.
+ *  2. Cajero usa lector de código de barras -> match exacto por SKU o
+ *     código de barras antes de caer a texto libre.
+ *  3. Si NO existe (típico de artículos pequeños: botones, agujas, y
+ *     demás mercería que nunca se catalogó) -> "Alta rápida": nombre +
+ *     precio + cantidad, sin salir de la pantalla de cobro, para que
+ *     nunca termine vendiéndose como "genérico" sin quedar en el
+ *     inventario real.
  *
- * Expone `focus()` vía ref para que PosScreen lo enfoque con F2
- * (ver nota de integración en CheckoutPanel.jsx sobre atajos centralizados).
+ * Expone `focus()` vía ref para que PosScreen lo enfoque con F2.
  */
 const BuscadorProducto = forwardRef(function BuscadorProducto(
   { onSeleccionarVariante },
   ref,
 ) {
+  const { mostrarToast } = useToast();
   const [texto, setTexto] = useState("");
   const [resultados, setResultados] = useState([]);
   const [buscando, setBuscando] = useState(false);
@@ -35,12 +39,27 @@ const BuscadorProducto = forwardRef(function BuscadorProducto(
   const inputRef = useRef(null);
   const contenedorRef = useRef(null);
 
+  // --- Alta rápida ---
+  const [categorias, setCategorias] = useState([]);
+  const [mostrarAltaRapida, setMostrarAltaRapida] = useState(false);
+  const [precioRapido, setPrecioRapido] = useState("");
+  const [cantidadRapida, setCantidadRapida] = useState("1");
+  const [categoriaRapidaId, setCategoriaRapidaId] = useState("");
+  const [guardandoRapido, setGuardandoRapido] = useState(false);
+
   useImperativeHandle(ref, () => ({
     focus: () => {
       setAbierto(true);
       inputRef.current?.focus();
     },
   }));
+
+  useEffect(() => {
+    categoriasApi
+      .listar()
+      .then(setCategorias)
+      .catch(() => setCategorias([]));
+  }, []);
 
   // --- Cierra el dropdown de resultados al hacer click fuera del buscador ---
   useEffect(() => {
@@ -50,6 +69,7 @@ const BuscadorProducto = forwardRef(function BuscadorProducto(
         !contenedorRef.current.contains(evento.target)
       ) {
         setAbierto(false);
+        setMostrarAltaRapida(false);
       }
     };
     document.addEventListener("mousedown", manejarClickFuera);
@@ -58,6 +78,7 @@ const BuscadorProducto = forwardRef(function BuscadorProducto(
 
   // --- Autocompletado con debounce ---
   useEffect(() => {
+    setMostrarAltaRapida(false);
     if (texto.trim().length < 1) {
       setResultados([]);
       return;
@@ -100,19 +121,42 @@ const BuscadorProducto = forwardRef(function BuscadorProducto(
     if (evento.key !== "Enter" || !texto.trim()) return;
     evento.preventDefault();
 
-    // Intento 1: match exacto por SKU o código de barras (lector físico)
     try {
       const producto = await productosApi.buscarPorCodigo(texto.trim());
       if (producto.variantes.length === 1) {
         seleccionarVariante(producto, producto.variantes[0]);
         return;
       }
-      // Si el producto tiene varias variantes, se muestran para elegir
       setResultados([producto]);
-      return;
     } catch {
       // No fue un código exacto — se deja que el autocompletado normal
       // (que ya corrió por el debounce) muestre los resultados de texto libre.
+    }
+  };
+
+  const crearAltaRapida = async () => {
+    if (!texto.trim() || !precioRapido) return;
+    setGuardandoRapido(true);
+    setError(null);
+    try {
+      const producto = await productosApi.altaRapida({
+        nombre: texto.trim(),
+        precio_venta: Number(precioRapido),
+        stock_inicial: Number(cantidadRapida) || 1,
+        categoria_id: categoriaRapidaId ? Number(categoriaRapidaId) : null,
+      });
+      mostrarToast(
+        `"${producto.nombre}" creado y agregado a la venta`,
+        "exito",
+      );
+      seleccionarVariante(producto, producto.variantes[0]);
+      setPrecioRapido("");
+      setCantidadRapida("1");
+      setMostrarAltaRapida(false);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setGuardandoRapido(false);
     }
   };
 
@@ -180,8 +224,62 @@ const BuscadorProducto = forwardRef(function BuscadorProducto(
         resultados.length === 0 &&
         !error && (
           <div className="buscador-producto__vacio">
-            <PackageSearch size={16} strokeWidth={2} />
-            <span>Sin resultados para "{texto}"</span>
+            {!mostrarAltaRapida ? (
+              <>
+                <PackageSearch size={16} strokeWidth={2} />
+                <span>Sin resultados para "{texto}"</span>
+                <button
+                  type="button"
+                  className="buscador-producto__boton-alta-rapida"
+                  onClick={() => setMostrarAltaRapida(true)}
+                >
+                  <Plus size={13} strokeWidth={2} />
+                  Crear "{texto}" ahora
+                </button>
+              </>
+            ) : (
+              <div className="buscador-producto__alta-rapida">
+                <p className="buscador-producto__alta-rapida-titulo">
+                  Nuevo producto: <strong>{texto}</strong>
+                </p>
+                <div className="buscador-producto__alta-rapida-campos">
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Precio"
+                    value={precioRapido}
+                    onChange={(e) => setPrecioRapido(e.target.value)}
+                    autoFocus
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Cantidad"
+                    value={cantidadRapida}
+                    onChange={(e) => setCantidadRapida(e.target.value)}
+                  />
+                  <select
+                    value={categoriaRapidaId}
+                    onChange={(e) => setCategoriaRapidaId(e.target.value)}
+                  >
+                    <option value="">Sin categoría</option>
+                    {categorias.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  className="buscador-producto__alta-rapida-guardar"
+                  disabled={guardandoRapido || !precioRapido}
+                  onClick={crearAltaRapida}
+                >
+                  {guardandoRapido ? "Creando…" : "Crear y agregar a la venta"}
+                </button>
+              </div>
+            )}
           </div>
         )}
     </div>

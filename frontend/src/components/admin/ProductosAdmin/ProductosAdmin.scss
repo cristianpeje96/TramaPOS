@@ -108,7 +108,7 @@
 
   &__campos-basicos {
     display: grid;
-    grid-template-columns: 2fr 2fr 1fr;
+    grid-template-columns: 2fr 2fr 1fr 1fr;
     gap: var(--tp-space-2);
 
     input,
@@ -117,6 +117,35 @@
       border: 1px solid var(--tp-color-border);
       border-radius: 8px;
       font-size: 0.85rem;
+    }
+  }
+
+  &__nueva-categoria {
+    display: flex;
+    gap: var(--tp-space-2);
+
+    input {
+      flex: 1;
+      padding: var(--tp-space-2);
+      border: 1px solid var(--tp-color-border);
+      border-radius: 8px;
+      font-size: 0.82rem;
+    }
+
+    button {
+      padding: var(--tp-space-2) var(--tp-space-3);
+      background: var(--tp-color-bg);
+      border: 1px dashed var(--tp-color-border);
+      border-radius: 8px;
+      font-size: 0.78rem;
+      color: var(--tp-color-primary);
+      cursor: pointer;
+      white-space: nowrap;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
     }
   }
 
@@ -307,7 +336,7 @@
   }
 
   &__campos-basicos--edicion {
-    grid-template-columns: 2fr 2fr 1fr auto;
+    grid-template-columns: 2fr 2fr 1fr 1fr auto;
     align-items: center;
   }
 

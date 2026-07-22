@@ -17,6 +17,7 @@ from app.db.session import get_db
 from app.modules.productos import carga_masiva, service
 from app.modules.productos.schemas import (
     ProductoActualizar,
+    ProductoAltaRapidaIn,
     ProductoCrear,
     ProductoDestacadoOut,
     ProductoOut,
@@ -59,6 +60,21 @@ async def buscar_productos(
 ):
     """Usado por el buscador del POS (F2) — pensado para autocompletar mientras se escribe."""
     return await service.buscar_productos(db, q)
+
+
+@router.post("/alta-rapida", response_model=ProductoOut, status_code=201)
+async def crear_producto_alta_rapida(
+    datos: ProductoAltaRapidaIn,
+    db: AsyncSession = Depends(get_db),
+    _usuario: Usuario = Depends(obtener_usuario_actual),
+):
+    """
+    Registro exprés desde el propio POS — para cuando el cajero
+    encuentra un producto (botón, aguja, etc.) que todavía no está en
+    el catálogo. Disponible para CUALQUIER usuario logueado, no solo
+    ADMIN, porque el problema real que resuelve pasa en plena venta.
+    """
+    return await service.crear_producto_alta_rapida(db, datos)
 
 
 @router.get("/codigo/{codigo}", response_model=ProductoOut)

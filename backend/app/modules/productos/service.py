@@ -11,9 +11,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.modules.categorias import service as categorias_service
 from app.modules.productos.models import Producto, VarianteProducto
 from app.modules.productos.schemas import (
     ProductoActualizar,
+    ProductoAltaRapidaIn,
     ProductoCrear,
     VarianteProductoActualizar,
 )
@@ -208,3 +210,57 @@ async def listar_mas_vendidos(
         for vid in variante_ids
         if vid in variantes_por_id
     ]
+
+
+async def _generar_siguiente_sku_varios(db: AsyncSession) -> str:
+    """
+    SKU automático tipo VAR-0001, VAR-0002... para productos de alta
+    rápida que no traen código de barras ni SKU propio (botones,
+    agujas, y demás artículos pequeños).
+    """
+    query = select(VarianteProducto.sku).where(VarianteProducto.sku.like("VAR-%"))
+    resultado = await db.execute(query)
+    numeros = []
+    for (sku,) in resultado.all():
+        sufijo = sku.replace("VAR-", "")
+        if sufijo.isdigit():
+            numeros.append(int(sufijo))
+    siguiente = (max(numeros) + 1) if numeros else 1
+    return f"VAR-{siguiente:04d}"
+
+
+async def crear_producto_alta_rapida(
+    db: AsyncSession, datos: ProductoAltaRapidaIn
+) -> Producto:
+    """
+    Registro mínimo para artículos pequeños descubiertos sobre la marcha
+    (botones, agujas, cierres...) — solo pide nombre, precio y cantidad.
+    Todo lo demás se completa con valores por defecto sensatos, para que
+    nunca terminen vendiéndose como "genérico" sin quedar en el inventario.
+    """
+    categoria_id = datos.categoria_id
+    if categoria_id is None and datos.categoria_nombre:
+        categoria = await categorias_service.obtener_o_crear_por_nombre(
+            db, datos.categoria_nombre
+        )
+        categoria_id = categoria.id
+
+    sku = await _generar_siguiente_sku_varios(db)
+
+    producto = Producto(
+        nombre=datos.nombre,
+        categoria_id=categoria_id,
+        unidad_medida="unidad",
+    )
+    producto.variantes = [
+        VarianteProducto(
+            sku=sku,
+            precio_venta=datos.precio_venta,
+            stock_actual=datos.stock_inicial,
+            stock_minimo=0,
+        )
+    ]
+    db.add(producto)
+    await db.commit()
+    await db.refresh(producto, attribute_names=["variantes"])
+    return producto

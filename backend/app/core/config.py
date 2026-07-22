@@ -1,5 +1,6 @@
 """
 TramaPos · Configuración central del backend.
+Lee las variables desde el .env (nunca hardcodear secretos aquí).
 """
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -7,8 +8,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-    env_file=".env", env_file_encoding="utf-8", extra="ignore"
-)
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
 
     # --- Entorno ---
     env: str = "development"
@@ -44,6 +45,10 @@ class Settings(BaseSettings):
 
     # --- Agente de hardware ---
     hardware_agent_ws_url: str = "ws://localhost:9100"
+
+    # --- Asistente de IA (OpenAI) ---
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4o-mini"
 
 
 # Instancia única reutilizada en toda la app vía Depends(get_settings)

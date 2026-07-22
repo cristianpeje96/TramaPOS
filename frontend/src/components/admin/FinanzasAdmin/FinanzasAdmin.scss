@@ -1,0 +1,235 @@
+.finanzas-admin {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tp-space-4);
+  max-width: 100%;
+
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: var(--tp-space-2);
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  &__ayuda {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--tp-color-text-muted);
+    max-width: 640px;
+  }
+
+  &__error {
+    margin: 0;
+    color: var(--tp-color-danger);
+    font-size: 0.8rem;
+  }
+
+  &__seccion {
+    display: flex;
+    flex-direction: column;
+    gap: var(--tp-space-2);
+    padding: var(--tp-space-3);
+    background: var(--tp-color-surface);
+    border: 1px solid var(--tp-color-border);
+    border-radius: var(--tp-radius);
+
+    h3 {
+      margin: 0;
+      font-size: 0.9rem;
+    }
+  }
+
+  &__form-categoria {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    gap: var(--tp-space-2);
+
+    input,
+    select {
+      padding: var(--tp-space-2);
+      border: 1px solid var(--tp-color-border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+
+    button {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: var(--tp-space-2) var(--tp-space-3);
+      background: var(--tp-color-primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      white-space: nowrap;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  &__chip {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+
+  &__chip--ingreso {
+    background: rgba(47, 122, 77, 0.1);
+    color: var(--tp-color-success);
+  }
+
+  &__chip--gasto {
+    background: rgba(192, 57, 43, 0.1);
+    color: var(--tp-color-danger);
+  }
+
+  &__form-movimiento {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 2fr 1fr auto;
+    gap: var(--tp-space-2);
+
+    input,
+    select {
+      padding: var(--tp-space-2);
+      border: 1px solid var(--tp-color-border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      min-width: 0;
+    }
+
+    button {
+      padding: var(--tp-space-2) var(--tp-space-3);
+      background: var(--tp-color-primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      white-space: nowrap;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__tabla-movimientos {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+
+    th {
+      text-align: left;
+      padding: var(--tp-space-2);
+      background: var(--tp-color-bg);
+      color: var(--tp-color-text-muted);
+      font-weight: 600;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+    }
+
+    td {
+      padding: var(--tp-space-2);
+      border-top: 1px solid var(--tp-color-border);
+    }
+
+    button {
+      background: none;
+      border: none;
+      color: var(--tp-color-text-muted);
+      cursor: pointer;
+
+      &:hover {
+        color: var(--tp-color-danger);
+      }
+    }
+  }
+
+  &__monto--ingreso {
+    color: var(--tp-color-success);
+    font-weight: 600;
+  }
+
+  &__monto--gasto {
+    color: var(--tp-color-danger);
+    font-weight: 600;
+  }
+
+  &__pyg-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    select {
+      padding: 4px 8px;
+      border: 1px solid var(--tp-color-border);
+      border-radius: 8px;
+      font-size: 0.82rem;
+    }
+  }
+
+  &__tabla-scroll {
+    overflow-x: auto;
+  }
+
+  &__tabla-pyg {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+    white-space: nowrap;
+
+    th {
+      text-align: right;
+      padding: 6px 10px;
+      background: var(--tp-color-bg);
+      color: var(--tp-color-text-muted);
+      font-weight: 600;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+
+      &:first-child {
+        text-align: left;
+      }
+    }
+
+    td {
+      text-align: right;
+      padding: 5px 10px;
+      border-top: 1px solid var(--tp-color-border);
+
+      &:first-child {
+        text-align: left;
+      }
+    }
+  }
+
+  &__fila--seccion td {
+    background: var(--tp-color-bg);
+    font-weight: 700;
+    text-align: left !important;
+  }
+
+  &__fila--total td {
+    font-weight: 700;
+    border-top: 2px solid var(--tp-color-border);
+  }
+
+  &__col-total {
+    color: var(--tp-color-primary);
+    font-weight: 700;
+  }
+}

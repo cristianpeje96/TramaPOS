@@ -21,10 +21,13 @@ from openpyxl.styles import Font
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.modules.categorias import service as categorias_service
 from app.modules.productos.models import Producto, VarianteProducto
+from app.modules.productos.service import _generar_siguiente_sku_varios
 
 COLUMNAS = [
     "nombre_producto",
+    "categoria",
     "descripcion",
     "unidad_medida",
     "sku",
@@ -39,6 +42,7 @@ COLUMNAS = [
 
 FILA_EJEMPLO = [
     "Hilo Guajira",
+    "Lanas",
     "Hilo grueso para tejido artesanal",
     "unidad",
     "HG-MOST-GRU",
@@ -49,6 +53,21 @@ FILA_EJEMPLO = [
     5000,
     20,
     5,
+]
+
+FILA_EJEMPLO_2 = [
+    "Botón madera 2cm",
+    "Mercería",
+    "",
+    "unidad",
+    "",  # SKU vacío: se genera solo (VAR-0001, VAR-0002...)
+    "",
+    "",
+    "",
+    500,
+    200,
+    50,
+    10,
 ]
 
 
@@ -63,6 +82,10 @@ def generar_plantilla() -> bytes:
 
     hoja.append(FILA_EJEMPLO)
     for celda in hoja[2]:
+        celda.font = Font(italic=True, color="888888")
+
+    hoja.append(FILA_EJEMPLO_2)
+    for celda in hoja[3]:
         celda.font = Font(italic=True, color="888888")
 
     # Ancho de columna razonable para que se lea sin abrir a pantalla completa
@@ -105,18 +128,21 @@ async def procesar_archivo(db: AsyncSession, contenido: bytes) -> dict:
             sku = str(fila.get("sku") or "").strip()
             precio = fila.get("precio_venta")
 
-            if not nombre or not sku or precio in (None, ""):
+            if not nombre or precio in (None, ""):
                 errores.append(
-                    f"Fila {numero_fila}: nombre_producto, sku y precio_venta son obligatorios"
+                    f"Fila {numero_fila}: nombre_producto y precio_venta son obligatorios"
                 )
                 continue
 
-            sku_existente = await db.execute(
-                select(VarianteProducto).where(VarianteProducto.sku == sku)
-            )
-            if sku_existente.scalar_one_or_none() is not None:
-                errores.append(f"Fila {numero_fila}: el SKU '{sku}' ya existe, se omitió")
-                continue
+            if sku:
+                sku_existente = await db.execute(
+                    select(VarianteProducto).where(VarianteProducto.sku == sku)
+                )
+                if sku_existente.scalar_one_or_none() is not None:
+                    errores.append(f"Fila {numero_fila}: el SKU '{sku}' ya existe, se omitió")
+                    continue
+            else:
+                sku = await _generar_siguiente_sku_varios(db)
 
             clave_producto = nombre.lower()
             producto = cache_productos.get(clave_producto)
@@ -126,8 +152,17 @@ async def procesar_archivo(db: AsyncSession, contenido: bytes) -> dict:
                 )
                 producto = resultado.scalar_one_or_none()
                 if producto is None:
+                    categoria_nombre = str(fila.get("categoria") or "").strip()
+                    categoria_id = None
+                    if categoria_nombre:
+                        categoria = await categorias_service.obtener_o_crear_por_nombre(
+                            db, categoria_nombre
+                        )
+                        categoria_id = categoria.id
+
                     producto = Producto(
                         nombre=nombre,
+                        categoria_id=categoria_id,
                         descripcion=str(fila.get("descripcion") or "").strip() or None,
                         unidad_medida=str(fila.get("unidad_medida") or "unidad").strip(),
                     )

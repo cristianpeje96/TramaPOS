@@ -91,6 +91,18 @@ class ProductoOut(ProductoBase):
     variantes: list[VarianteProductoOut] = []
 
 
+# --- Alta rápida: para productos pequeños descubiertos sobre la marcha
+# (botones, agujas, etc.) — mínima fricción, máximos valores por defecto.
+class ProductoAltaRapidaIn(BaseModel):
+    nombre: str = Field(min_length=2, max_length=150)
+    precio_venta: float = Field(ge=0)
+    stock_inicial: float = Field(default=1, ge=0)
+    categoria_id: int | None = None
+    categoria_nombre: str | None = Field(
+        default=None, description="Si no existe, se crea; ignorado si se manda categoria_id"
+    )
+
+
 # --- Alertas de stock ---
 class StockBajoOut(BaseModel):
     producto: str
