@@ -20,7 +20,9 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+from app.modules.clientes.models import Cliente
 from app.modules.productos.models import VarianteProducto
+from app.modules.usuarios.models import Usuario
 
 
 class CanalVenta(str, PyEnum):
@@ -91,6 +93,8 @@ class Venta(Base):
     detalles: Mapped[list["DetalleVenta"]] = relationship(
         back_populates="venta", cascade="all, delete-orphan"
     )
+    cliente: Mapped["Cliente | None"] = relationship()
+    vendedor: Mapped["Usuario | None"] = relationship()
 
 
 class DetalleVenta(Base):

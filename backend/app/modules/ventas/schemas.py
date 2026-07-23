@@ -13,6 +13,12 @@ from app.modules.ventas.models import CanalVenta, EstadoFacturaDian, EstadoVenta
 class LineaVentaCrear(BaseModel):
     variante_id: int
     cantidad: float = Field(gt=0)
+    precio_unitario: float | None = Field(
+        default=None,
+        description="Si no se manda, usa el precio_venta ACTUAL del producto. "
+        "Se usa al facturar una cotización, para respetar el precio que se cotizó "
+        "aunque el precio del catálogo haya cambiado desde entonces.",
+    )
 
 
 class VentaCrear(BaseModel):

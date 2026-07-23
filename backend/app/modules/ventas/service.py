@@ -89,7 +89,12 @@ async def procesar_venta(db: AsyncSession, datos: VentaCrear, vendedor_id: int |
                 )
 
         subtotal = sum(
-            linea.cantidad * float(variantes[linea.variante_id].precio_venta)
+            linea.cantidad
+            * (
+                float(linea.precio_unitario)
+                if linea.precio_unitario is not None
+                else float(variantes[linea.variante_id].precio_venta)
+            )
             for linea in datos.lineas
         )
 
@@ -139,7 +144,12 @@ async def procesar_venta(db: AsyncSession, datos: VentaCrear, vendedor_id: int |
         if config_empresa.aplica_iva:
             for linea in datos.lineas:
                 variante = variantes[linea.variante_id]
-                monto_linea = linea.cantidad * float(variante.precio_venta)
+                precio_efectivo = (
+                    float(linea.precio_unitario)
+                    if linea.precio_unitario is not None
+                    else float(variante.precio_venta)
+                )
+                monto_linea = linea.cantidad * precio_efectivo
                 tasa = float(variante.porcentaje_iva)
                 iva_linea = monto_linea - monto_linea / (1 + tasa / 100) if tasa > 0 else 0.0
                 iva_por_linea[linea.variante_id] = (tasa, iva_linea)
@@ -166,13 +176,16 @@ async def procesar_venta(db: AsyncSession, datos: VentaCrear, vendedor_id: int |
 
         for linea in datos.lineas:
             variante = variantes[linea.variante_id]
+            precio_efectivo = (
+                linea.precio_unitario if linea.precio_unitario is not None else variante.precio_venta
+            )
             tasa_aplicada, iva_linea = iva_por_linea.get(linea.variante_id, (0.0, 0.0))
             db.add(
                 DetalleVenta(
                     venta_id=venta.id,
                     variante_id=variante.id,
                     cantidad=linea.cantidad,
-                    precio_unitario=variante.precio_venta,
+                    precio_unitario=precio_efectivo,
                     porcentaje_iva_aplicado=tasa_aplicada,
                     iva_linea=iva_linea,
                 )
@@ -208,7 +221,7 @@ async def listar_ventas(
     limite: int = 100,
 ) -> list[Venta]:
     """Historial de ventas para administración y para el buscador de devoluciones."""
-    query = select(Venta).options(_con_detalles_completos()).order_by(Venta.creado_en.desc())
+    query = select(Venta).options(_con_detalles_completos(), selectinload(Venta.cliente), selectinload(Venta.vendedor)).order_by(Venta.creado_en.desc())
 
     if canal is not None:
         query = query.where(Venta.canal == canal)
@@ -225,6 +238,6 @@ async def listar_ventas(
 
 
 async def obtener_venta(db: AsyncSession, venta_id: int) -> Venta | None:
-    query = select(Venta).options(_con_detalles_completos()).where(Venta.id == venta_id)
+    query = select(Venta).options(_con_detalles_completos(), selectinload(Venta.cliente), selectinload(Venta.vendedor)).where(Venta.id == venta_id)
     resultado = await db.execute(query)
     return resultado.scalar_one_or_none()

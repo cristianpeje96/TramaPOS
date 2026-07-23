@@ -6,17 +6,17 @@
  * un solo lugar.
  */
 
-import axios from "axios";
+import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1",
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
   timeout: 10000,
-  headers: { "Content-Type": "application/json" },
+  headers: { 'Content-Type': 'application/json' },
 });
 
 // --- Interceptor de autenticación: agrega el token a cada request ---
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem("tramapos_token");
+  const token = localStorage.getItem('tramapos_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -29,16 +29,14 @@ apiClient.interceptors.response.use(
   (error) => {
     // Token vencido o inválido: limpia la sesión y fuerza volver al login.
     if (error.response?.status === 401) {
-      localStorage.removeItem("tramapos_token");
-      localStorage.removeItem("tramapos_usuario");
+      localStorage.removeItem('tramapos_token');
+      localStorage.removeItem('tramapos_usuario');
       window.location.reload();
     }
     const mensaje =
-      error.response?.data?.detail ||
-      error.message ||
-      "Error de conexión con el backend";
+      error.response?.data?.detail || error.message || 'Error de conexión con el backend';
     return Promise.reject(new Error(mensaje));
-  },
+  }
 );
 
 // =====================================================================
@@ -46,61 +44,47 @@ apiClient.interceptors.response.use(
 // =====================================================================
 export const authApi = {
   login: (username, password) =>
-    apiClient.post("/auth/login", { username, password }).then((r) => r.data),
-  me: () => apiClient.get("/auth/me").then((r) => r.data),
+    apiClient.post('/auth/login', { username, password }).then((r) => r.data),
+  me: () => apiClient.get('/auth/me').then((r) => r.data),
 };
 
 export const usuariosApi = {
-  listar: () => apiClient.get("/usuarios").then((r) => r.data),
-  crear: (datos) => apiClient.post("/usuarios", datos).then((r) => r.data),
+  listar: () => apiClient.get('/usuarios').then((r) => r.data),
+  crear: (datos) => apiClient.post('/usuarios', datos).then((r) => r.data),
 };
 
 export const configuracionEmpresaApi = {
-  obtener: () => apiClient.get("/configuracion-empresa").then((r) => r.data),
-  actualizar: (datos) =>
-    apiClient.patch("/configuracion-empresa", datos).then((r) => r.data),
+  obtener: () => apiClient.get('/configuracion-empresa').then((r) => r.data),
+  actualizar: (datos) => apiClient.patch('/configuracion-empresa', datos).then((r) => r.data),
 };
 
 export const proveedoresApi = {
-  listar: () => apiClient.get("/proveedores").then((r) => r.data),
-  buscar: (texto) =>
-    apiClient
-      .get("/proveedores/buscar", { params: { q: texto } })
-      .then((r) => r.data),
-  crear: (datos) => apiClient.post("/proveedores", datos).then((r) => r.data),
-  actualizar: (id, datos) =>
-    apiClient.patch(`/proveedores/${id}`, datos).then((r) => r.data),
+  listar: () => apiClient.get('/proveedores').then((r) => r.data),
+  buscar: (texto) => apiClient.get('/proveedores/buscar', { params: { q: texto } }).then((r) => r.data),
+  crear: (datos) => apiClient.post('/proveedores', datos).then((r) => r.data),
+  actualizar: (id, datos) => apiClient.patch(`/proveedores/${id}`, datos).then((r) => r.data),
 };
 
 export const comprasApi = {
-  listar: (params = {}) =>
-    apiClient.get("/compras", { params }).then((r) => r.data),
+  listar: (params = {}) => apiClient.get('/compras', { params }).then((r) => r.data),
   obtener: (id) => apiClient.get(`/compras/${id}`).then((r) => r.data),
-  crear: (datos) => apiClient.post("/compras", datos).then((r) => r.data),
-  anular: (id, motivo) =>
-    apiClient.post(`/compras/${id}/anular`, { motivo }).then((r) => r.data),
+  crear: (datos) => apiClient.post('/compras', datos).then((r) => r.data),
+  anular: (id, motivo) => apiClient.post(`/compras/${id}/anular`, { motivo }).then((r) => r.data),
 };
 
 export const reportesApi = {
-  resumen: (params = {}) =>
-    apiClient.get("/reportes/resumen", { params }).then((r) => r.data),
+  resumen: (params = {}) => apiClient.get('/reportes/resumen', { params }).then((r) => r.data),
   ventasPorDia: (params = {}) =>
-    apiClient.get("/reportes/ventas-por-dia", { params }).then((r) => r.data),
+    apiClient.get('/reportes/ventas-por-dia', { params }).then((r) => r.data),
   ventasPorMes: (meses = 12) =>
-    apiClient
-      .get("/reportes/ventas-por-mes", { params: { meses } })
-      .then((r) => r.data),
+    apiClient.get('/reportes/ventas-por-mes', { params: { meses } }).then((r) => r.data),
   productosMasVendidos: (params = {}) =>
-    apiClient
-      .get("/reportes/productos-mas-vendidos", { params })
-      .then((r) => r.data),
+    apiClient.get('/reportes/productos-mas-vendidos', { params }).then((r) => r.data),
 };
 
 export const asistenteIaApi = {
   consultar: (mensaje, historial = []) =>
-    apiClient
-      .post("/asistente-ia/consultar", { mensaje, historial })
-      .then((r) => r.data),
+    apiClient.post('/asistente-ia/consultar', { mensaje, historial }).then((r) => r.data),
 };
 
 // =====================================================================
@@ -109,60 +93,45 @@ export const asistenteIaApi = {
 export const productosApi = {
   listar: (incluirInactivos = false) =>
     apiClient
-      .get("/productos", { params: { incluir_inactivos: incluirInactivos } })
+      .get('/productos', { params: { incluir_inactivos: incluirInactivos } })
       .then((r) => r.data),
-  buscar: (texto) =>
-    apiClient
-      .get("/productos/buscar", { params: { q: texto } })
-      .then((r) => r.data),
-  buscarPorCodigo: (codigo) =>
-    apiClient.get(`/productos/codigo/${codigo}`).then((r) => r.data),
-  crear: (datos) => apiClient.post("/productos", datos).then((r) => r.data),
-  altaRapida: (datos) =>
-    apiClient.post("/productos/alta-rapida", datos).then((r) => r.data),
-  actualizar: (id, datos) =>
-    apiClient.patch(`/productos/${id}`, datos).then((r) => r.data),
+  buscar: (texto) => apiClient.get('/productos/buscar', { params: { q: texto } }).then((r) => r.data),
+  buscarPorCodigo: (codigo) => apiClient.get(`/productos/codigo/${codigo}`).then((r) => r.data),
+  crear: (datos) => apiClient.post('/productos', datos).then((r) => r.data),
+  altaRapida: (datos) => apiClient.post('/productos/alta-rapida', datos).then((r) => r.data),
+  actualizar: (id, datos) => apiClient.patch(`/productos/${id}`, datos).then((r) => r.data),
   actualizarVariante: (varianteId, datos) =>
-    apiClient
-      .patch(`/productos/variantes/${varianteId}`, datos)
-      .then((r) => r.data),
-  stockBajo: () => apiClient.get("/productos/stock-bajo").then((r) => r.data),
-  favoritos: () => apiClient.get("/productos/favoritos").then((r) => r.data),
+    apiClient.patch(`/productos/variantes/${varianteId}`, datos).then((r) => r.data),
+  stockBajo: () => apiClient.get('/productos/stock-bajo').then((r) => r.data),
+  favoritos: () => apiClient.get('/productos/favoritos').then((r) => r.data),
   masVendidos: (params = {}) =>
-    apiClient.get("/productos/mas-vendidos", { params }).then((r) => r.data),
+    apiClient.get('/productos/mas-vendidos', { params }).then((r) => r.data),
   descargarPlantilla: () =>
-    apiClient
-      .get("/productos/plantilla", { responseType: "blob" })
-      .then((r) => r.data),
+    apiClient.get('/productos/plantilla', { responseType: 'blob' }).then((r) => r.data),
   subirCargaMasiva: (archivo) => {
     const formData = new FormData();
-    formData.append("archivo", archivo);
+    formData.append('archivo', archivo);
     return apiClient
-      .post("/productos/carga-masiva", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      .post('/productos/carga-masiva', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       })
       .then((r) => r.data);
   },
 };
 
 export const categoriasApi = {
-  listar: () => apiClient.get("/categorias").then((r) => r.data),
-  crear: (datos) => apiClient.post("/categorias", datos).then((r) => r.data),
-  actualizar: (id, datos) =>
-    apiClient.patch(`/categorias/${id}`, datos).then((r) => r.data),
+  listar: () => apiClient.get('/categorias').then((r) => r.data),
+  crear: (datos) => apiClient.post('/categorias', datos).then((r) => r.data),
+  actualizar: (id, datos) => apiClient.patch(`/categorias/${id}`, datos).then((r) => r.data),
 };
 
 // =====================================================================
 // CLIENTES
 // =====================================================================
 export const clientesApi = {
-  buscar: (texto) =>
-    apiClient
-      .get("/clientes/buscar", { params: { q: texto } })
-      .then((r) => r.data),
-  crearRapido: (datos) =>
-    apiClient.post("/clientes/rapido", datos).then((r) => r.data),
-  crear: (datos) => apiClient.post("/clientes", datos).then((r) => r.data),
+  buscar: (texto) => apiClient.get('/clientes/buscar', { params: { q: texto } }).then((r) => r.data),
+  crearRapido: (datos) => apiClient.post('/clientes/rapido', datos).then((r) => r.data),
+  crear: (datos) => apiClient.post('/clientes', datos).then((r) => r.data),
 };
 
 // =====================================================================
@@ -171,24 +140,18 @@ export const clientesApi = {
 export const fidelizacionApi = {
   simularRedencion: (clienteId, puntos) =>
     apiClient
-      .get(`/fidelizacion/simular-redencion/${clienteId}`, {
-        params: { puntos },
-      })
+      .get(`/fidelizacion/simular-redencion/${clienteId}`, { params: { puntos } })
       .then((r) => r.data),
   historial: (clienteId) =>
     apiClient.get(`/fidelizacion/historial/${clienteId}`).then((r) => r.data),
-  configuracion: () =>
-    apiClient.get("/fidelizacion/configuracion").then((r) => r.data),
+  configuracion: () => apiClient.get('/fidelizacion/configuracion').then((r) => r.data),
   actualizarConfiguracion: (datos) =>
-    apiClient.patch("/fidelizacion/configuracion", datos).then((r) => r.data),
+    apiClient.patch('/fidelizacion/configuracion', datos).then((r) => r.data),
   rangoCliente: (clienteId) =>
-    apiClient
-      .get(`/fidelizacion/rango-cliente/${clienteId}`)
-      .then((r) => r.data),
+    apiClient.get(`/fidelizacion/rango-cliente/${clienteId}`).then((r) => r.data),
   rangos: {
-    listar: () => apiClient.get("/fidelizacion/rangos").then((r) => r.data),
-    crear: (datos) =>
-      apiClient.post("/fidelizacion/rangos", datos).then((r) => r.data),
+    listar: () => apiClient.get('/fidelizacion/rangos').then((r) => r.data),
+    crear: (datos) => apiClient.post('/fidelizacion/rangos', datos).then((r) => r.data),
     actualizar: (id, datos) =>
       apiClient.patch(`/fidelizacion/rangos/${id}`, datos).then((r) => r.data),
   },
@@ -198,10 +161,22 @@ export const fidelizacionApi = {
 // VENTAS
 // =====================================================================
 export const ventasApi = {
-  crear: (datos) => apiClient.post("/ventas", datos).then((r) => r.data),
-  listar: (params = {}) =>
-    apiClient.get("/ventas", { params }).then((r) => r.data),
+  crear: (datos) => apiClient.post('/ventas', datos).then((r) => r.data),
+  listar: (params = {}) => apiClient.get('/ventas', { params }).then((r) => r.data),
   obtener: (ventaId) => apiClient.get(`/ventas/${ventaId}`).then((r) => r.data),
+  descargarFacturaPdf: async (ventaId) => {
+    const respuesta = await apiClient.get(`/ventas/${ventaId}/factura-pdf`, {
+      responseType: 'blob',
+    });
+    const url = window.URL.createObjectURL(new Blob([respuesta.data]));
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = `factura-${ventaId}.pdf`;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    window.URL.revokeObjectURL(url);
+  },
 };
 
 // =====================================================================
@@ -209,11 +184,9 @@ export const ventasApi = {
 // =====================================================================
 export const cajaApi = {
   sesionActual: (cajaFisicaId) =>
-    apiClient
-      .get("/caja/actual", { params: { caja_fisica_id: cajaFisicaId } })
-      .then((r) => r.data),
-  sesionesAbiertas: () => apiClient.get("/caja/abiertas").then((r) => r.data),
-  abrir: (datos) => apiClient.post("/caja/abrir", datos).then((r) => r.data),
+    apiClient.get('/caja/actual', { params: { caja_fisica_id: cajaFisicaId } }).then((r) => r.data),
+  sesionesAbiertas: () => apiClient.get('/caja/abiertas').then((r) => r.data),
+  abrir: (datos) => apiClient.post('/caja/abrir', datos).then((r) => r.data),
   previewCierre: (sesionId) =>
     apiClient.get(`/caja/${sesionId}/preview-cierre`).then((r) => r.data),
   cerrar: (sesionId, datos) =>
@@ -221,30 +194,46 @@ export const cajaApi = {
 };
 
 export const cajasFisicasApi = {
-  listar: () => apiClient.get("/cajas-fisicas").then((r) => r.data),
-  crear: (datos) => apiClient.post("/cajas-fisicas", datos).then((r) => r.data),
+  listar: () => apiClient.get('/cajas-fisicas').then((r) => r.data),
+  crear: (datos) => apiClient.post('/cajas-fisicas', datos).then((r) => r.data),
 };
 
 export const devolucionesApi = {
-  crear: (datos) => apiClient.post("/devoluciones", datos).then((r) => r.data),
+  crear: (datos) => apiClient.post('/devoluciones', datos).then((r) => r.data),
   obtenerPorVenta: (ventaId) =>
     apiClient.get(`/devoluciones/venta/${ventaId}`).then((r) => r.data),
 };
 
 export const finanzasApi = {
-  listarCategorias: () =>
-    apiClient.get("/finanzas/categorias").then((r) => r.data),
-  crearCategoria: (datos) =>
-    apiClient.post("/finanzas/categorias", datos).then((r) => r.data),
+  listarCategorias: () => apiClient.get('/finanzas/categorias').then((r) => r.data),
+  crearCategoria: (datos) => apiClient.post('/finanzas/categorias', datos).then((r) => r.data),
   listarMovimientos: (params = {}) =>
-    apiClient.get("/finanzas/movimientos", { params }).then((r) => r.data),
-  crearMovimiento: (datos) =>
-    apiClient.post("/finanzas/movimientos", datos).then((r) => r.data),
+    apiClient.get('/finanzas/movimientos', { params }).then((r) => r.data),
+  crearMovimiento: (datos) => apiClient.post('/finanzas/movimientos', datos).then((r) => r.data),
   eliminarMovimiento: (id) => apiClient.delete(`/finanzas/movimientos/${id}`),
   perdidasGanancias: (anio) =>
-    apiClient
-      .get("/finanzas/perdidas-ganancias", { params: { anio } })
-      .then((r) => r.data),
+    apiClient.get('/finanzas/perdidas-ganancias', { params: { anio } }).then((r) => r.data),
+};
+
+export const cotizacionesApi = {
+  listar: (estado) => apiClient.get('/cotizaciones', { params: { estado } }).then((r) => r.data),
+  obtener: (id) => apiClient.get(`/cotizaciones/${id}`).then((r) => r.data),
+  crear: (datos) => apiClient.post('/cotizaciones', datos).then((r) => r.data),
+  cambiarEstado: (id, estado) =>
+    apiClient.patch(`/cotizaciones/${id}/estado`, { estado }).then((r) => r.data),
+  facturar: (id, datos) =>
+    apiClient.post(`/cotizaciones/${id}/facturar`, datos).then((r) => r.data),
+  descargarPdf: async (id, numero) => {
+    const respuesta = await apiClient.get(`/cotizaciones/${id}/pdf`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([respuesta.data]));
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = `${numero}.pdf`;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    window.URL.revokeObjectURL(url);
+  },
 };
 
 export default apiClient;

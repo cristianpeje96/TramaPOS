@@ -1,0 +1,6 @@
+{
+  "impresora_vendor_id": "0x04b8",
+  "impresora_product_id": "0x0202",
+  "ws_host": "localhost",
+  "ws_port": 9100
+}

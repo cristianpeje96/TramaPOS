@@ -22,22 +22,45 @@ de caja (ej. en una carpeta `C:\TramaPos\`).
 ## 2. Configurar la impresora (primera vez en cada PC)
 
 1. Corre `TramaPos-Agente.exe` una vez (doble click). Va a crear un
-   archivo `config.json` al lado del `.exe`, con valores de ejemplo, y
-   te va a avisar que la impresora no se encontró — es normal la
-   primera vez.
-2. Necesitas el **vendor_id** y **product_id** reales de tu ticketera:
-   - Abre el **Administrador de dispositivos** de Windows (`Windows + X` → "Administrador de dispositivos").
-   - Busca tu impresora (usualmente bajo "Dispositivos USB" o "Controladoras de bus USB").
-   - Click derecho → Propiedades → pestaña "Detalles" → selecciona "ID de hardware".
-   - Vas a ver algo como `USB\VID_04B8&PID_0202...` — `VID_04B8` es el vendor_id (`0x04b8`) y `PID_0202` es el product_id (`0x0202`).
-3. Abre `config.json` con el Bloc de notas y reemplaza esos dos valores:
-   ```json
-   {
-     "impresora_vendor_id": "0x04b8",
-     "impresora_product_id": "0x0202",
-     "ws_host": "localhost",
-     "ws_port": 9100
-   }
+   archivo `config.json` al lado del `.exe`, con valores de ejemplo.
+
+2. Hay **dos formas** de conectar la impresora — usa la que le
+   corresponda a tu caso:
+
+   ### Modo "windows" (recomendado — la mayoría de casos)
+   Si tu impresora **ya aparece instalada** en Windows (la ves en
+   "Dispositivos e impresoras", o Windows le asignó un ícono de
+   impresora en el Administrador de dispositivos):
+
+   1. Abre "Dispositivos e impresoras" en Windows y copia el nombre
+      **EXACTO** de tu impresora (ej. `BIXOLON SRP-330II`).
+   2. Edita `config.json`:
+      ```json
+      {
+        "modo_conexion": "windows",
+        "impresora_nombre_windows": "BIXOLON SRP-330II",
+        "ws_host": "localhost",
+        "ws_port": 9100
+      }
+      ```
+   3. Este modo necesita `pywin32` (ya está en `requirements.txt`).
+
+   ### Modo "usb" (para impresoras que Windows detecta como dispositivo USB genérico, sin instalarla como impresora)
+   1. Abre el **Administrador de dispositivos** (`Windows + X`) →
+      busca tu impresora bajo "Dispositivos USB" o "Controladoras de
+      bus USB" (no bajo "Impresoras").
+   2. Click derecho → Propiedades → pestaña "Detalles" → "ID de
+      hardware". Debe verse como `USB\VID_04B8&PID_0202...`.
+   3. Edita `config.json`:
+      ```json
+      {
+        "modo_conexion": "usb",
+        "impresora_vendor_id": "0x04b8",
+        "impresora_product_id": "0x0202",
+        "ws_host": "localhost",
+        "ws_port": 9100
+      }
+      ```
    ```
 4. Vuelve a correr `TramaPos-Agente.exe`. Debería decir que está escuchando, sin el error de impresora.
 

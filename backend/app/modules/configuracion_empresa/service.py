@@ -24,8 +24,8 @@ async def actualizar_configuracion(
     db: AsyncSession, datos: ConfiguracionEmpresaActualizar
 ) -> ConfiguracionEmpresa:
     config = await obtener_configuracion(db)
-    config.aplica_iva = datos.aplica_iva
-    config.porcentaje_iva_default = datos.porcentaje_iva_default
+    for campo, valor in datos.model_dump().items():
+        setattr(config, campo, valor)
     await db.commit()
     await db.refresh(config)
     return config

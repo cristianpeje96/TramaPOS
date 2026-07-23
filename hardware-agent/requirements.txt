@@ -2,4 +2,5 @@ websockets==13.1
 python-escpos==3.1
 pyusb==1.2.1
 pyserial==3.5
+pywin32==308
 pyinstaller==6.11.1

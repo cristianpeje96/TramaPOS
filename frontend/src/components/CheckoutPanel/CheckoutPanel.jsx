@@ -1,30 +1,15 @@
-import React, {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
-import {
-  User,
-  Gift,
-  CreditCard,
-  Banknote,
-  Landmark,
-  Keyboard,
-  Tag,
-  Award,
-  Wallet,
-} from "lucide-react";
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { User, Gift, CreditCard, Banknote, Landmark, Keyboard, Tag, Award, Wallet } from 'lucide-react';
 
-import { fidelizacionApi, ventasApi } from "../../services/api";
-import { useHardwareAgent } from "../../hooks/useHardwareAgent";
-import "./CheckoutPanel.scss";
+import { configuracionEmpresaApi, fidelizacionApi, ventasApi } from '../../services/api';
+import { useHardwareAgent } from '../../hooks/useHardwareAgent';
+import { useAuth } from '../Auth/AuthProvider';
+import './CheckoutPanel.scss';
 
 const METODOS_PAGO = [
-  { id: "EFECTIVO", label: "Efectivo", icon: Banknote },
-  { id: "DATAFONO", label: "Datáfono", icon: CreditCard },
-  { id: "TRANSFERENCIA", label: "Transferencia", icon: Landmark },
+  { id: 'EFECTIVO', label: 'Efectivo', icon: Banknote },
+  { id: 'DATAFONO', label: 'Datáfono', icon: CreditCard },
+  { id: 'TRANSFERENCIA', label: 'Transferencia', icon: Landmark },
 ];
 
 // Denominaciones de billetes/monedas COP para el conteo rápido en efectivo
@@ -52,60 +37,61 @@ const CheckoutPanel = forwardRef(function CheckoutPanel(
     cliente = null, // { id, nombre_completo, puntos_balance }
     lineas = [], // [{ variante_id, cantidad, precio_unitario, nombre, color }]
     sesionCajaId,
-    canal = "POS",
+    canal = 'POS',
     onBuscarCliente, // callback F7 — abre el modal de cliente (aún no construido)
     onVentaCreada, // callback tras confirmar la venta con éxito
   },
-  ref,
+  ref
 ) {
-  const [metodoPago, setMetodoPago] = useState("EFECTIVO");
+  const [metodoPago, setMetodoPago] = useState('EFECTIVO');
   const [puntosARedimir, setPuntosARedimir] = useState(0);
   const [redimiendo, setRedimiendo] = useState(false);
   const [simulacion, setSimulacion] = useState(null);
   const [rangoCliente, setRangoCliente] = useState(null);
   const [mostrarDescuentoManual, setMostrarDescuentoManual] = useState(false);
-  const [tipoDescuentoManual, setTipoDescuentoManual] = useState("porcentaje"); // 'porcentaje' | 'monto'
-  const [valorDescuentoManual, setValorDescuentoManual] = useState("");
-  const [motivoDescuentoManual, setMotivoDescuentoManual] = useState("");
+  const [tipoDescuentoManual, setTipoDescuentoManual] = useState('porcentaje'); // 'porcentaje' | 'monto'
+  const [valorDescuentoManual, setValorDescuentoManual] = useState('');
+  const [motivoDescuentoManual, setMotivoDescuentoManual] = useState('');
   const [procesando, setProcesando] = useState(false);
   const [errorVenta, setErrorVenta] = useState(null);
-  const [montoRecibido, setMontoRecibido] = useState("");
+  const [montoRecibido, setMontoRecibido] = useState('');
+  const [configEmpresa, setConfigEmpresa] = useState(null);
+  const { usuario } = useAuth();
+
+  useEffect(() => {
+    configuracionEmpresaApi.obtener().then(setConfigEmpresa).catch(() => { });
+  }, []);
 
   const inputPuntosRef = useRef(null);
-  const { procesarVenta: imprimirYAbrirCajon, abrirCajonManual } =
-    useHardwareAgent();
+  const { procesarVenta: imprimirYAbrirCajon, abrirCajonManual } = useHardwareAgent();
 
   const puntosDisponibles = cliente?.puntos_balance ?? 0;
-  const subtotal = lineas.reduce(
-    (suma, l) => suma + l.cantidad * l.precio_unitario,
-    0,
-  );
+  const subtotal = lineas.reduce((suma, l) => suma + l.cantidad * l.precio_unitario, 0);
   const descuentoPuntos = simulacion?.valor_descuento ?? 0;
   const descuentoFidelizacion = rangoCliente
     ? subtotal * (rangoCliente.porcentaje_descuento / 100)
     : 0;
   const descuentoManualCalculado =
-    tipoDescuentoManual === "porcentaje"
+    tipoDescuentoManual === 'porcentaje'
       ? subtotal * ((Number(valorDescuentoManual) || 0) / 100)
       : Math.min(Number(valorDescuentoManual) || 0, subtotal);
-  const descuentoManualActivo =
-    mostrarDescuentoManual && Number(valorDescuentoManual) > 0;
+  const descuentoManualActivo = mostrarDescuentoManual && Number(valorDescuentoManual) > 0;
   const totalConDescuento = Math.max(
     subtotal -
-      descuentoPuntos -
-      descuentoFidelizacion -
-      (descuentoManualActivo ? descuentoManualCalculado : 0),
-    0,
+    descuentoPuntos -
+    descuentoFidelizacion -
+    (descuentoManualActivo ? descuentoManualCalculado : 0),
+    0
   );
   const cambioADevolver = Number(montoRecibido || 0) - totalConDescuento;
 
   const agregarBillete = (valor) =>
     setMontoRecibido((prev) => String((Number(prev) || 0) + valor));
   const marcarMontoExacto = () => setMontoRecibido(String(totalConDescuento));
-  const limpiarMontoRecibido = () => setMontoRecibido("");
+  const limpiarMontoRecibido = () => setMontoRecibido('');
 
   useEffect(() => {
-    if (metodoPago !== "EFECTIVO") setMontoRecibido("");
+    if (metodoPago !== 'EFECTIVO') setMontoRecibido('');
   }, [metodoPago]);
 
   const activarRedencion = () => {
@@ -140,10 +126,7 @@ const CheckoutPanel = forwardRef(function CheckoutPanel(
     }
     const temporizador = setTimeout(async () => {
       try {
-        const resultado = await fidelizacionApi.simularRedencion(
-          cliente.id,
-          puntosARedimir,
-        );
+        const resultado = await fidelizacionApi.simularRedencion(cliente.id, puntosARedimir);
         setSimulacion(resultado);
       } catch (err) {
         setSimulacion(null);
@@ -158,20 +141,58 @@ const CheckoutPanel = forwardRef(function CheckoutPanel(
     setPuntosARedimir(valor);
   };
 
-  const construirTicketTexto = (venta) =>
-    [
-      "TRAMAPOS",
+  const construirTicketTexto = (venta) => {
+    const ahora = new Date();
+    const fechaHora = ahora.toLocaleString('es-CO', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    const separador = '--------------------------------';
+
+    const lineasTicket = [
+      configEmpresa?.razon_social || 'TRAMAPOS',
+      ...(configEmpresa?.nit ? [`NIT: ${configEmpresa.nit}`] : []),
+      ...(configEmpresa?.direccion ? [configEmpresa.direccion] : []),
+      ...(configEmpresa?.telefono ? [`Tel: ${configEmpresa.telefono}`] : []),
+      separador,
       `Venta #${venta.id}`,
+      fechaHora,
+      `Cajero: ${usuario?.nombre_completo || '-'}`,
+      `Cliente: ${cliente?.nombre_completo || 'Mostrador'}`,
+      separador,
       ...lineas.map(
-        (l) => `${l.cantidad} x ${l.nombre}  $${l.precio_unitario}`,
+        (l) => `${l.cantidad} x ${l.nombre}${l.color ? ` (${l.color})` : ''}  $${l.precio_unitario.toLocaleString('es-CO')}`
       ),
-      `TOTAL: $${venta.total}`,
-    ].join("\n");
+      separador,
+      `Subtotal: $${venta.subtotal.toLocaleString('es-CO')}`,
+      ...(venta.descuento_manual > 0
+        ? [`Descuento${venta.motivo_descuento_manual ? ` (${venta.motivo_descuento_manual})` : ''}: -$${venta.descuento_manual.toLocaleString('es-CO')}`]
+        : []),
+      ...(venta.descuento_puntos > 0
+        ? [`Descuento por puntos: -$${venta.descuento_puntos.toLocaleString('es-CO')}`]
+        : []),
+      ...(venta.descuento_fidelizacion > 0
+        ? [`Descuento ${venta.rango_fidelizacion_aplicado || 'fidelización'}: -$${venta.descuento_fidelizacion.toLocaleString('es-CO')}`]
+        : []),
+      ...(venta.total_iva > 0 ? [`IVA incluido: $${venta.total_iva.toLocaleString('es-CO')}`] : []),
+      separador,
+      `TOTAL: $${venta.total.toLocaleString('es-CO')}`,
+      `Pago: ${METODOS_PAGO.find((m) => m.id === venta.metodo_pago)?.label || venta.metodo_pago}`,
+      ...(venta.puntos_ganados > 0 ? [`Puntos ganados: ${venta.puntos_ganados}`] : []),
+      separador,
+      'Gracias por su compra',
+    ];
+
+    return lineasTicket.join('\n');
+  };
 
   const confirmarVenta = async () => {
     if (lineas.length === 0 || procesando) return;
     if (descuentoManualActivo && !motivoDescuentoManual.trim()) {
-      setErrorVenta("El descuento manual requiere indicar un motivo");
+      setErrorVenta('El descuento manual requiere indicar un motivo');
       return;
     }
     setProcesando(true);
@@ -183,14 +204,11 @@ const CheckoutPanel = forwardRef(function CheckoutPanel(
         sesion_caja_id: sesionCajaId,
         cliente_id: cliente?.id ?? null,
         metodo_pago: metodoPago,
-        lineas: lineas.map((l) => ({
-          variante_id: l.variante_id,
-          cantidad: l.cantidad,
-        })),
+        lineas: lineas.map((l) => ({ variante_id: l.variante_id, cantidad: l.cantidad })),
         puntos_a_redimir: puntosARedimir,
         ...(descuentoManualActivo && {
           motivo_descuento_manual: motivoDescuentoManual.trim(),
-          ...(tipoDescuentoManual === "porcentaje"
+          ...(tipoDescuentoManual === 'porcentaje'
             ? { descuento_manual_porcentaje: Number(valorDescuentoManual) }
             : { descuento_manual_monto: Number(valorDescuentoManual) }),
         }),
@@ -200,14 +218,14 @@ const CheckoutPanel = forwardRef(function CheckoutPanel(
       onVentaCreada?.(venta);
 
       // Reset del panel para la siguiente venta
-      setMetodoPago("EFECTIVO");
+      setMetodoPago('EFECTIVO');
       setPuntosARedimir(0);
       setRedimiendo(false);
       setSimulacion(null);
       setMostrarDescuentoManual(false);
-      setValorDescuentoManual("");
-      setMotivoDescuentoManual("");
-      setMontoRecibido("");
+      setValorDescuentoManual('');
+      setMotivoDescuentoManual('');
+      setMontoRecibido('');
     } catch (err) {
       setErrorVenta(err.message);
     } finally {
@@ -236,15 +254,9 @@ const CheckoutPanel = forwardRef(function CheckoutPanel(
       </header>
 
       <div className="checkout-panel__customer">
-        <button
-          type="button"
-          className="checkout-panel__customer-btn"
-          onClick={onBuscarCliente}
-        >
+        <button type="button" className="checkout-panel__customer-btn" onClick={onBuscarCliente}>
           <User size={18} strokeWidth={2} />
-          <span>
-            {cliente ? cliente.nombre_completo : "Buscar cliente (F7)"}
-          </span>
+          <span>{cliente ? cliente.nombre_completo : 'Buscar cliente (F7)'}</span>
         </button>
         {rangoCliente?.rango && (
           <span className="checkout-panel__rango-badge">
@@ -258,15 +270,13 @@ const CheckoutPanel = forwardRef(function CheckoutPanel(
 
       {cliente && (
         <div
-          className={`checkout-panel__points ${
-            redimiendo ? "checkout-panel__points--active" : ""
-          }`}
+          className={`checkout-panel__points ${redimiendo ? 'checkout-panel__points--active' : ''
+            }`}
         >
           <div className="checkout-panel__points-info">
             <Gift size={18} strokeWidth={2} />
             <span>
-              Saldo: <strong className="u-cifra">{puntosDisponibles}</strong>{" "}
-              pts
+              Saldo: <strong className="u-cifra">{puntosDisponibles}</strong> pts
             </span>
           </div>
 
@@ -300,9 +310,8 @@ const CheckoutPanel = forwardRef(function CheckoutPanel(
           <button
             key={id}
             type="button"
-            className={`checkout-panel__payment-btn ${
-              metodoPago === id ? "checkout-panel__payment-btn--selected" : ""
-            }`}
+            className={`checkout-panel__payment-btn ${metodoPago === id ? 'checkout-panel__payment-btn--selected' : ''
+              }`}
             onClick={() => setMetodoPago(id)}
           >
             <Icon size={20} strokeWidth={2} />
@@ -311,7 +320,7 @@ const CheckoutPanel = forwardRef(function CheckoutPanel(
         ))}
       </div>
 
-      {metodoPago === "EFECTIVO" && (
+      {metodoPago === 'EFECTIVO' && (
         <div className="checkout-panel__cash">
           <div className="checkout-panel__cash-header">
             <Wallet size={14} strokeWidth={2} />
@@ -337,27 +346,22 @@ const CheckoutPanel = forwardRef(function CheckoutPanel(
 
           <div className="checkout-panel__cash-billetes">
             {DENOMINACIONES_COP.map((valor) => (
-              <button
-                key={valor}
-                type="button"
-                onClick={() => agregarBillete(valor)}
-              >
+              <button key={valor} type="button" onClick={() => agregarBillete(valor)}>
                 +{valor >= 1000 ? `${valor / 1000}k` : valor}
               </button>
             ))}
           </div>
 
-          {montoRecibido !== "" && (
+          {montoRecibido !== '' && (
             <div
-              className={`checkout-panel__cash-resultado ${
-                cambioADevolver < 0
-                  ? "checkout-panel__cash-resultado--falta"
-                  : "checkout-panel__cash-resultado--cambio"
-              }`}
+              className={`checkout-panel__cash-resultado ${cambioADevolver < 0
+                  ? 'checkout-panel__cash-resultado--falta'
+                  : 'checkout-panel__cash-resultado--cambio'
+                }`}
             >
-              <span>{cambioADevolver < 0 ? "Falta" : "Cambio a devolver"}</span>
+              <span>{cambioADevolver < 0 ? 'Falta' : 'Cambio a devolver'}</span>
               <span className="u-cifra">
-                ${Math.abs(cambioADevolver).toLocaleString("es-CO")}
+                ${Math.abs(cambioADevolver).toLocaleString('es-CO')}
               </span>
             </div>
           )}
@@ -371,9 +375,7 @@ const CheckoutPanel = forwardRef(function CheckoutPanel(
           onClick={() => setMostrarDescuentoManual((v) => !v)}
         >
           <Tag size={14} strokeWidth={2} />
-          {mostrarDescuentoManual
-            ? "Quitar descuento manual"
-            : "Aplicar descuento manual"}
+          {mostrarDescuentoManual ? 'Quitar descuento manual' : 'Aplicar descuento manual'}
         </button>
 
         {mostrarDescuentoManual && (
@@ -381,23 +383,15 @@ const CheckoutPanel = forwardRef(function CheckoutPanel(
             <div className="checkout-panel__manual-discount-tipo">
               <button
                 type="button"
-                className={
-                  tipoDescuentoManual === "porcentaje"
-                    ? "checkout-panel__manual-discount-tipo-btn--activo"
-                    : ""
-                }
-                onClick={() => setTipoDescuentoManual("porcentaje")}
+                className={tipoDescuentoManual === 'porcentaje' ? 'checkout-panel__manual-discount-tipo-btn--activo' : ''}
+                onClick={() => setTipoDescuentoManual('porcentaje')}
               >
                 %
               </button>
               <button
                 type="button"
-                className={
-                  tipoDescuentoManual === "monto"
-                    ? "checkout-panel__manual-discount-tipo-btn--activo"
-                    : ""
-                }
-                onClick={() => setTipoDescuentoManual("monto")}
+                className={tipoDescuentoManual === 'monto' ? 'checkout-panel__manual-discount-tipo-btn--activo' : ''}
+                onClick={() => setTipoDescuentoManual('monto')}
               >
                 $
               </button>
@@ -405,10 +399,8 @@ const CheckoutPanel = forwardRef(function CheckoutPanel(
             <input
               type="number"
               min={0}
-              max={tipoDescuentoManual === "porcentaje" ? 100 : undefined}
-              placeholder={
-                tipoDescuentoManual === "porcentaje" ? "% descuento" : "Monto $"
-              }
+              max={tipoDescuentoManual === 'porcentaje' ? 100 : undefined}
+              placeholder={tipoDescuentoManual === 'porcentaje' ? '% descuento' : 'Monto $'}
               value={valorDescuentoManual}
               onChange={(e) => setValorDescuentoManual(e.target.value)}
             />
@@ -425,37 +417,31 @@ const CheckoutPanel = forwardRef(function CheckoutPanel(
       <div className="checkout-panel__totals">
         <div className="checkout-panel__totals-row">
           <span>Subtotal</span>
-          <span className="u-cifra">${subtotal.toLocaleString("es-CO")}</span>
+          <span className="u-cifra">${subtotal.toLocaleString('es-CO')}</span>
         </div>
         {descuentoPuntos > 0 && (
           <div className="checkout-panel__totals-row checkout-panel__totals-row--discount">
             <span>Descuento puntos</span>
-            <span className="u-cifra">
-              -${descuentoPuntos.toLocaleString("es-CO")}
-            </span>
+            <span className="u-cifra">-${descuentoPuntos.toLocaleString('es-CO')}</span>
           </div>
         )}
         {descuentoFidelizacion > 0 && (
           <div className="checkout-panel__totals-row checkout-panel__totals-row--discount">
             <span>Descuento {rangoCliente?.rango}</span>
-            <span className="u-cifra">
-              -${descuentoFidelizacion.toLocaleString("es-CO")}
-            </span>
+            <span className="u-cifra">-${descuentoFidelizacion.toLocaleString('es-CO')}</span>
           </div>
         )}
         {descuentoManualActivo && (
           <div className="checkout-panel__totals-row checkout-panel__totals-row--discount">
             <span>Descuento manual</span>
             <span className="u-cifra">
-              -${descuentoManualCalculado.toLocaleString("es-CO")}
+              -${descuentoManualCalculado.toLocaleString('es-CO')}
             </span>
           </div>
         )}
         <div className="checkout-panel__totals-row checkout-panel__totals-row--final">
           <span>Total</span>
-          <span className="u-cifra">
-            ${totalConDescuento.toLocaleString("es-CO")}
-          </span>
+          <span className="u-cifra">${totalConDescuento.toLocaleString('es-CO')}</span>
         </div>
       </div>
 
@@ -467,7 +453,7 @@ const CheckoutPanel = forwardRef(function CheckoutPanel(
         disabled={procesando || lineas.length === 0}
         onClick={confirmarVenta}
       >
-        {procesando ? "Procesando…" : "Cobrar (F10)"}
+        {procesando ? 'Procesando…' : 'Cobrar (F10)'}
       </button>
     </section>
   );

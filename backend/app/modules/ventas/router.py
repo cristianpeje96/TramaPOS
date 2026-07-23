@@ -13,13 +13,16 @@ hardware). La función real de envío vive en el módulo facturacion_dian.
 from datetime import date
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import obtener_usuario_actual
 from app.db.session import get_db
+from app.modules.configuracion_empresa import service as configuracion_empresa_service
 from app.modules.usuarios.models import Usuario
 from app.modules.ventas import service
 from app.modules.ventas.models import CanalVenta
+from app.modules.ventas.pdf import generar_factura_pdf
 from app.modules.ventas.schemas import VentaCrear, VentaOut
 
 router = APIRouter(prefix="/ventas", tags=["ventas"])
@@ -69,3 +72,24 @@ async def crear_venta(
     background_tasks.add_task(notificar_venta_creada, venta.id, venta.canal.value)
 
     return venta
+
+
+@router.get("/{venta_id}/factura-pdf")
+async def descargar_factura_pdf(
+    venta_id: int,
+    db: AsyncSession = Depends(get_db),
+    _usuario: Usuario = Depends(obtener_usuario_actual),
+):
+    """Factura formal en hoja carta con membrete — para clientes que
+    necesitan un comprobante más formal que la tirilla térmica del POS."""
+    venta = await service.obtener_venta(db, venta_id)
+    if venta is None:
+        raise HTTPException(status_code=404, detail="Venta no encontrada")
+
+    config_empresa = await configuracion_empresa_service.obtener_configuracion(db)
+    pdf_bytes = generar_factura_pdf(venta, config_empresa)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=factura-{venta.id}.pdf"},
+    )

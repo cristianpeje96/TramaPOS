@@ -1,27 +1,27 @@
-import React, { useEffect, useState } from "react";
-import { Receipt } from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import { Receipt, Download } from 'lucide-react';
 
-import { ventasApi } from "../../../services/api";
-import { SkeletonFilas } from "../../Skeleton/Skeleton";
-import "./HistorialVentas.scss";
+import { ventasApi } from '../../../services/api';
+import { SkeletonFilas } from '../../Skeleton/Skeleton';
+import './HistorialVentas.scss';
 
 const ETIQUETAS_ESTADO_DIAN = {
-  NO_APLICA: "No aplica",
-  PENDIENTE: "Pendiente",
-  ENVIADA: "Enviada",
-  ACEPTADA: "Aceptada",
-  RECHAZADA: "Rechazada",
+  NO_APLICA: 'No aplica',
+  PENDIENTE: 'Pendiente',
+  ENVIADA: 'Enviada',
+  ACEPTADA: 'Aceptada',
+  RECHAZADA: 'Rechazada',
 };
 
 const ETIQUETAS_ESTADO_VENTA = {
-  COMPLETADA: "Completada",
-  ANULADA: "Devuelta",
-  PENDIENTE_PAGO: "Pendiente de pago",
+  COMPLETADA: 'Completada',
+  ANULADA: 'Devuelta',
+  PENDIENTE_PAGO: 'Pendiente de pago',
 };
 
 export default function HistorialVentas() {
   const [ventas, setVentas] = useState([]);
-  const [canal, setCanal] = useState("");
+  const [canal, setCanal] = useState('');
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
 
@@ -62,9 +62,7 @@ export default function HistorialVentas() {
       {cargando ? (
         <SkeletonFilas filas={5} columnas={7} />
       ) : ventas.length === 0 ? (
-        <p className="historial-ventas__estado">
-          No hay ventas registradas todavía.
-        </p>
+        <p className="historial-ventas__estado">No hay ventas registradas todavía.</p>
       ) : (
         <table className="historial-ventas__tabla">
           <thead>
@@ -78,6 +76,7 @@ export default function HistorialVentas() {
               <th>IVA</th>
               <th>Puntos</th>
               <th>Factura DIAN</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -85,14 +84,12 @@ export default function HistorialVentas() {
               <tr
                 key={venta.id}
                 className={
-                  venta.estado === "ANULADA"
-                    ? "historial-ventas__fila--anulada"
-                    : ""
+                  venta.estado === 'ANULADA' ? 'historial-ventas__fila--anulada' : ''
                 }
               >
                 <td className="u-cifra">{venta.id}</td>
                 <td className="u-cifra">
-                  {new Date(venta.creado_en).toLocaleString("es-CO")}
+                  {new Date(venta.creado_en).toLocaleString('es-CO')}
                 </td>
                 <td>
                   <span
@@ -103,20 +100,14 @@ export default function HistorialVentas() {
                 </td>
                 <td>{venta.canal}</td>
                 <td>{venta.metodo_pago}</td>
+                <td className="u-cifra">${venta.total.toLocaleString('es-CO')}</td>
                 <td className="u-cifra">
-                  ${venta.total.toLocaleString("es-CO")}
-                </td>
-                <td className="u-cifra">
-                  {venta.total_iva > 0
-                    ? `$${venta.total_iva.toLocaleString("es-CO")}`
-                    : "—"}
+                  {venta.total_iva > 0 ? `$${venta.total_iva.toLocaleString('es-CO')}` : '—'}
                 </td>
                 <td className="u-cifra">
                   {venta.puntos_ganados > 0 && `+${venta.puntos_ganados}`}
                   {venta.puntos_redimidos > 0 && ` -${venta.puntos_redimidos}`}
-                  {venta.puntos_ganados === 0 &&
-                    venta.puntos_redimidos === 0 &&
-                    "—"}
+                  {venta.puntos_ganados === 0 && venta.puntos_redimidos === 0 && '—'}
                 </td>
                 <td>
                   <span
@@ -124,6 +115,16 @@ export default function HistorialVentas() {
                   >
                     {ETIQUETAS_ESTADO_DIAN[venta.estado_factura_dian]}
                   </span>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    className="historial-ventas__boton-pdf"
+                    title="Descargar factura formal en PDF"
+                    onClick={() => ventasApi.descargarFacturaPdf(venta.id)}
+                  >
+                    <Download size={14} strokeWidth={2} />
+                  </button>
                 </td>
               </tr>
             ))}

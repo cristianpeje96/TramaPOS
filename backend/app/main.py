@@ -3,8 +3,11 @@ TramaPos · Punto de entrada del backend.
 Corre con: uvicorn app.main:app --reload
 """
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.modules.caja.router import router as caja_router
@@ -13,6 +16,7 @@ from app.modules.categorias.router import router as categorias_router
 from app.modules.clientes.router import router as clientes_router
 from app.modules.compras.router import router as compras_router
 from app.modules.configuracion_empresa.router import router as configuracion_empresa_router
+from app.modules.cotizaciones.router import router as cotizaciones_router
 from app.modules.devoluciones.router import router as devoluciones_router
 from app.modules.facturacion_dian.router import router as facturacion_dian_router
 from app.modules.fidelizacion.router import router as fidelizacion_router
@@ -58,9 +62,21 @@ app.include_router(compras_router, prefix=API_PREFIX)
 app.include_router(reportes_router, prefix=API_PREFIX)
 app.include_router(asistente_ia_router, prefix=API_PREFIX)
 app.include_router(finanzas_router, prefix=API_PREFIX)
+app.include_router(cotizaciones_router, prefix=API_PREFIX)
 
 # --- WebSocket de sincronización entre terminales POS ---
 app.include_router(websocket_router)
+
+# --- Frontend compilado (npm run build) ---
+# Se sirve desde el mismo proceso del backend, así en producción solo
+# hay que mantener corriendo UN programa, no dos. Va al FINAL: las
+# rutas de la API de arriba siempre tienen prioridad; esto solo
+# atiende lo que no coincidió con ninguna ruta de /api/v1/*.
+# Si la carpeta no existe (ej. en desarrollo con `npm run dev` aparte),
+# simplemente no se monta y el backend sigue funcionando igual.
+_FRONTEND_DIST = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+if _FRONTEND_DIST.is_dir():
+    app.mount("/", StaticFiles(directory=str(_FRONTEND_DIST), html=True), name="frontend")
 
 
 @app.get("/health", tags=["sistema"])

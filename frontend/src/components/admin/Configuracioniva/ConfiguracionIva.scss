@@ -154,4 +154,17 @@
     font-size: 0.78rem;
     color: var(--tp-color-text-muted);
   }
+
+  &__subtitulo {
+    margin: var(--tp-space-2) 0 0;
+    font-size: 0.9rem;
+    border-top: 1px solid var(--tp-color-border);
+    padding-top: var(--tp-space-3);
+  }
+
+  &__membrete {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--tp-space-2);
+  }
 }
